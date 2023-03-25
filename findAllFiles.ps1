@@ -1,6 +1,6 @@
-﻿$pathMainDirToAnalyze = "D:\source"
-$pathFileMetaData = "D:\DBS_output_files.csv"
-$pathDirMetaData = "D:\DBS_output_folders.csv"
+﻿$mainDirToAnalyze = "D:\source"
+$outputFileForFileMetaData = "D:\DBS_output_files.csv"
+$outputFileForDirMetaData = "D:\DBS_output_folders.csv"
 
 [string[]]$excludeFolders = @(
 ".gradle",
@@ -115,19 +115,19 @@ function saveMetaDataToFile($data, $path) {
     $data | ForEach-Object {New-Object PSObject -Property $_} | Export-Csv -NoTypeInformation -Path $path
 }
 
-echo "The directory will be analyzed (including subdirs): ${pathMainDirToAnalyze}"
+echo "The directory will be analyzed (including subdirs): ${mainDirToAnalyze}"
 echo "The directories with the following names will be ignored: ${excludeFolders}"
 echo "Okay, let's go, please wait until the process is finished, this might take a while."
 
 $allFiles = [System.Collections.ArrayList]::new()
 $allFolders = [System.Collections.ArrayList]::new()
 
-recursiveMetaDataSearch $pathMainDirToAnalyze
+recursiveMetaDataSearch $mainDirToAnalyze
 
-saveMetaDataToFile $allFiles $pathFileMetaData
-saveMetaDataToFile $allFolders $pathDirMetaData
+saveMetaDataToFile $allFiles $outputFileForFileMetaData
+saveMetaDataToFile $allFolders $outputFileForDirMetaData
 
-echo "The files, you've specified are written, please have a look into them: ${pathFileMetaData} and ${pathDirMetaData}"
+echo "The files, you've specified are written, please have a look into them: ${outputFileForFileMetaData} and ${outputFileForDirMetaData}"
 
 #Set-ExecutionPolicy -ExecutionPolicy Undefined -Scope CurrentUser
 #Set-ExecutionPolicy -ExecutionPolicy Unrestricted -Scope CurrentUser
