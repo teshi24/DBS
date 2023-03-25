@@ -1,4 +1,8 @@
-﻿[string[]]$excludeFolders = @(
+﻿$pathMainDirToAnalyze = "D:\source"
+$pathFileMetaData = "D:\DBS_output_files.csv"
+$pathDirMetaData = "D:\DBS_output_folders.csv"
+
+[string[]]$excludeFolders = @(
 ".gradle",
 ".idea",
 ".vscode",
@@ -10,12 +14,6 @@
 "lib",
 "node_modules"
 )
-
-
-echo "The directories with the following names will be ignored"
-echo $excludeFolders
-echo "=================="
-
 
 Function List-FileMetaData  
 {  
@@ -91,42 +89,45 @@ Function List-DirMetaData
  
     #return New-Object PSObject -Property $hash 
     return $hash 
-}  
+}
 
-
-
-function handlePrintingOfAllData($path) {
-    echo "handle ${path}"
-    echo " "
-    echo $_.FullName
-    echo " "
-    if (Test-Path -Path $_.FullName -PathType Leaf) {
-        $list = List-FileMetaData -File $path
-        ConvertTo-Csv -InputObject $list
-        $path >> D:\DBS_output_files.txt
+function preparePrintingOfMetaDataForItem($path) {
+    if (Test-Path -Path $path -PathType Leaf) {
+        $hashTable = List-FileMetaData -File $path
+        $allFiles.Add($hashTable) | out-null
     } else {
-        $list = List-DirMetaData -Dir $path
-        ConvertTo-Csv -InputObject $list
-        $path >> D:\DBS_output_directories.txt
+        $hashTable = List-DirMetaData -Dir $path
+        $allFolders.Add($hashTable) | out-null
     }
 }
 
-dir -Path D:\source -Filter *.* -ErrorAction SilentlyContinue -Exclude $excludeFolders | %{
-   handlePrintingOfAllData($_.FullName)
-}
-
-
-function recursive($path) {
+function recursiveMetaDataSearch($path) {
     dir -Path $path -Filter *.* -ErrorAction SilentlyContinue -Exclude $excludeFolders | %{
-        handlePrintingOfAllData($_.FullName)
+        preparePrintingOfMetaDataForItem($_.FullName)
         if (Test-Path -Path $_.FullName -PathType Leaf) {
             return
         }
-        recursive($_.FullName)
+        recursiveMetaDataSearch($_.FullName)
     }
 }
 
-#recursive D:\source*
+function saveMetaDataToFile($data, $path) {
+    $data | ForEach-Object {New-Object PSObject -Property $_} | Export-Csv -NoTypeInformation -Path $path
+}
+
+echo "The directory will be analyzed (including subdirs): ${pathMainDirToAnalyze}"
+echo "The directories with the following names will be ignored: ${excludeFolders}"
+echo "Okay, let's go, please wait until the process is finished, this might take a while."
+
+$allFiles = [System.Collections.ArrayList]::new()
+$allFolders = [System.Collections.ArrayList]::new()
+
+recursiveMetaDataSearch $pathMainDirToAnalyze
+
+saveMetaDataToFile $allFiles $pathFileMetaData
+saveMetaDataToFile $allFolders $pathDirMetaData
+
+echo "The files, you've specified are written, please have a look into them: ${pathFileMetaData} and ${pathDirMetaData}"
 
 #Set-ExecutionPolicy -ExecutionPolicy Undefined -Scope CurrentUser
 #Set-ExecutionPolicy -ExecutionPolicy Unrestricted -Scope CurrentUser
