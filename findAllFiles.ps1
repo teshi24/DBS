@@ -12,7 +12,10 @@ $outputFileForDirMetaData = "D:\DBS_output_folders.csv"
 "target",
 "temp",
 "lib",
-"node_modules"
+"node_modules",
+"src",
+"test",
+"java"
 )
 
 Function List-FileMetaData  
@@ -119,15 +122,29 @@ echo "The directory will be analyzed (including subdirs): ${mainDirToAnalyze}"
 echo "The directories with the following names will be ignored: ${excludeFolders}"
 echo "Okay, let's go, please wait until the process is finished, this might take a while."
 
-$allFiles = [System.Collections.ArrayList]::new()
-$allFolders = [System.Collections.ArrayList]::new()
+$ValueOfDisableLastAccessBeforeScript = ((fsutil behavior query disablelastaccess) -split '(?=\d)',2).Get(1)[0]
+$tempValueOfDisableLastAccess = 3
 
-recursiveMetaDataSearch $mainDirToAnalyze
+fsutil behavior set disablelastaccess $tempValueOfDisableLastAccess | out-null
 
-saveMetaDataToFile $allFiles $outputFileForFileMetaData
-saveMetaDataToFile $allFolders $outputFileForDirMetaData
+echo "FYI: NTFS Option DisableLastAccess has been changed from ${ValueOfDisableLastAccessBeforeScript} to ${tempValueOfDisableLastAccess}, to ensure that the value 'Last Access' is not currupted by executing this script."
+echo "Note: If you stop this script for any reason by yourself before it sais is finished, you need to take care of the cleanup yourself."
 
-echo "The files, you've specified are written, please have a look into them: ${outputFileForFileMetaData} and ${outputFileForDirMetaData}"
+try {
+    $allFiles = [System.Collections.ArrayList]::new()
+    $allFolders = [System.Collections.ArrayList]::new()
 
+    recursiveMetaDataSearch $mainDirToAnalyze
+
+    saveMetaDataToFile $allFiles $outputFileForFileMetaData
+    saveMetaDataToFile $allFolders $outputFileForDirMetaData
+
+    echo "The files, you've specified are written, please have a look into them: ${outputFileForFileMetaData} and ${outputFileForDirMetaData}"
+}
+finally {
+    fsutil behavior set disablelastaccess $ValueOfDisableLastAccessBeforeScript | out-null
+    echo "FYI: NTFS Option DisableLastAccess has been reset back to ${ValueOfDisableLastAccessBeforeScript}"
+    echo "Thank you for your patience!"
+}
 #Set-ExecutionPolicy -ExecutionPolicy Undefined -Scope CurrentUser
 #Set-ExecutionPolicy -ExecutionPolicy Unrestricted -Scope CurrentUser
