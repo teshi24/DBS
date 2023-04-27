@@ -1,54 +1,236 @@
--- MySQL Workbench Forward Engineering
-
-SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0;
-SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0;
-SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION';
-
--- -----------------------------------------------------
--- Schema fsc
--- -----------------------------------------------------
--- fileSystemChecker
-DROP SCHEMA IF EXISTS `fsc` ;
-
--- -----------------------------------------------------
--- Schema fsc
+-- SQL-Dump FileSystemChecker
 --
--- fileSystemChecker
--- -----------------------------------------------------
-CREATE SCHEMA IF NOT EXISTS `fsc` DEFAULT CHARACTER SET utf8 COLLATE utf8_bin ;
-SHOW WARNINGS;
-USE `fsc` ;
+-- Host: 127.0.0.1
+-- Erstellungszeit: 27. Apr 2023 um 15:59
+-- Server-Version: 10.4.28-MariaDB
+-- PHP-Version: 8.2.4
 
--- -----------------------------------------------------
--- Table `fsc`.`file`
--- -----------------------------------------------------
-DROP TABLE IF EXISTS `fsc`.`file` ;
+SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
+START TRANSACTION;
+SET time_zone = "+00:00";
 
-SHOW WARNINGS;
-CREATE TABLE IF NOT EXISTS `fsc`.`file` (
+
+/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
+/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
+/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
+/*!40101 SET NAMES utf8mb4 */;
+
+--
+-- Datenbank: `fsc`
+--
+DROP DATABASE IF EXISTS `fsc`;
+CREATE DATABASE `fsc` DEFAULT CHARACTER SET utf8 COLLATE utf8_bin;
+USE `fsc`;
+
+
+-- --------------------------------------------------------
+
+--
+-- Tabellenstruktur für Tabelle `ratiobasis`
+--
+
+CREATE TABLE `ratiobasis` (
   `ID` INT NOT NULL AUTO_INCREMENT,
-  `folderID` INT NOT NULL,
-  `name` VARCHAR(45) NOT NULL,
-  `lastAccess` TIMESTAMP NULL,
-  `priority` VARCHAR(45) NULL,
-  `changeDate` TIMESTAMP NULL,
-  `lastSave` TIMESTAMP NULL,
-  `creationDate` TIMESTAMP NULL,
-  `size` DECIMAL NOT NULL,
-  `filetype` VARCHAR(45) NOT NULL,
-  PRIMARY KEY (`ID`),
-  UNIQUE INDEX `idfile_UNIQUE` (`ID` ASC))
+  `ratio` INT NOT NULL,
+  `weight` INT NOT NULL,
+  `recommendedAction` ENUM('D', 'B', 'N') NULL COMMENT 'D = Delete, B = Backup, N = Nothing, don\\\'t touch!\', null = no specific action recommended by this entry alone',
+  PRIMARY KEY (`ID`))
 ENGINE = InnoDB;
 
-SHOW WARNINGS;
+--
+-- Daten für Tabelle `ratiobasis`
+--
 
--- -----------------------------------------------------
--- Table `fsc`.`folder`
--- -----------------------------------------------------
-DROP TABLE IF EXISTS `fsc`.`folder` ;
+INSERT INTO `ratiobasis` (`ratio`, `weight`, `recommendedAction`) VALUES
+(100, 80, 'D'),
+(90, 80, 'D'),
+(80, 80, 'D'),
+(70, 80, 'D'),
+(70, 50, 'D'),
+(60, 50, 'D'),
+(50, 50, 'D'),
+(40, 50, 'D'),
+(80, 50, 'B'),
+(50, 50, 'B'),
+(0, 100, 'N');
 
-SHOW WARNINGS;
-CREATE TABLE IF NOT EXISTS `fsc`.`folder` (
+-- --------------------------------------------------------
+
+--
+-- Tabellenstruktur für Tabelle `filename`
+--
+
+CREATE TABLE `filename` (
+  `ID` INT NOT NULL AUTO_INCREMENT,
+  `name` VARCHAR(255) NOT NULL,
+  `ratiobasisID` INT NOT NULL,
+  PRIMARY KEY (`ID`),
+  UNIQUE INDEX `name_UNIQUE` (`name` ASC),
+  CONSTRAINT `fk_filename_ratiobasis1`
+    FOREIGN KEY (`ratiobasisID`)
+    REFERENCES `ratiobasis` (`ID`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB;
+
+--
+-- Daten für Tabelle `filename`
+--
+
+INSERT INTO `filename` (`ID`, `name`, `ratiobasisID`) VALUES
+(1, 'Pagefile.sys', 11),
+(2, 'Swapfile.sys', 11);
+
+-- --------------------------------------------------------
+
+--
+-- Tabellenstruktur für Tabelle `filetype`
+--
+
+CREATE TABLE `filetype` (
+  `ID` INT NOT NULL AUTO_INCREMENT,
+  `fileending` VARCHAR(20) NOT NULL,
+  `ratiobasisID` INT NOT NULL,
+  PRIMARY KEY (`ID`),
+  INDEX `fk_filetype_ratiobasis1_idx` (`ratiobasisID` ASC),
+  CONSTRAINT `fk_filetype_ratiobasis1`
+    FOREIGN KEY (`ratiobasisID`)
+    REFERENCES `ratiobasis` (`ID`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB;
+
+--
+-- Daten für Tabelle `filetype`
+--
+
+INSERT INTO `filetype` (`ID`, `fileending`, `ratiobasisID`) VALUES
+(1, 'DMP', 2),
+(2, '.log', 2),
+(3, '.tmp', 2),
+(4, '.msi', 2),
+(5, '.png', 9),
+(6, '.jpg', 9),
+(7, '.jpeg', 9),
+(8, '.mp4', 9),
+(9, '.mp3', 9),
+(10, '.docx', 10),
+(11, '.pdf', 10),
+(12, '.pptx', 10);
+
+-- --------------------------------------------------------
+
+--
+-- Tabellenstruktur für Tabelle `foldername`
+--
+
+CREATE TABLE `foldername` (
+  `ID` INT NOT NULL AUTO_INCREMENT,
+  `name` VARCHAR(255) NOT NULL,
+  `ratiobasisID` INT NOT NULL,
+  PRIMARY KEY (`ID`),
+  UNIQUE INDEX `name_UNIQUE` (`name` ASC),
+  CONSTRAINT `fk_foldername_ratiobasis1`
+    FOREIGN KEY (`ratiobasisID`)
+    REFERENCES `ratiobasis` (`ID`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB;
+--
+-- Daten für Tabelle `foldername`
+--
+
+INSERT INTO `foldername` (`ID`, `name`, `ratiobasisID`) VALUES
+(1, 'System32', 11),
+(2, 'WinSxS', 11),
+(3, 'System Volume Information', 11),
+(21, 'C:\\Windows\\Temp', 1),
+(22, 'C:\\Windows\\Downloaded Program Files', 1),
+(23, 'C:\\Windows\\LiveKernelReports', 1),
+(24, 'C:\\Program Files\\rempl', 1),
+(25, 'C:\\Users\\%userprofiles%\\Downloads', 1),
+(26, 'C:\\Users\\%userprofiles%\\AppData\\Local\\Google\\Chrome\\User Data\\Default\\Cache', 1),
+(27, 'C:\\Users\\%userprofiles%\\AppData\\Local\\Mozilla\\Firefox', 1),
+(28, 'C:\\Users\\%userprofiles%\\AppData\\Local\\Microsoft\\Internet Explorer\\CacheStorage', 1),
+(29, 'C:\\Windows\\Logs\\CBS', 1),
+(30, 'C:\\Windows\\SoftwareDistribution\\Download', 1),
+(31, 'C:\\Users\\%userprofiles%\\AppData\\Local\\Temp', 1),
+(32, 'C:\\Windows\\Prefetch', 1),
+(33, 'C:\\Users\\%userprofiles%\\AppData\\Local\\CrashDumps', 1),
+(34, 'C:\\ProgramData\\Microsoft\\Windows\\WER\\ReportArchive', 1),
+(35, 'C:\\Users\\%userprofiles%\\Documents', 9),
+(36, 'C:\\Users\\%userprofiles%\\Bilder', 9);
+
+-- --------------------------------------------------------
+
+--
+-- Tabellenstruktur für Tabelle `size`
+--
+CREATE TABLE `size` (
+  `ID` INT NOT NULL AUTO_INCREMENT,
+  `sizeInKB` INT NOT NULL,
+  `ratiobasisID` INT NOT NULL,
+  PRIMARY KEY (`ID`),
+  CONSTRAINT `fk_size_ratiobasis1`
+    FOREIGN KEY (`ratiobasisID`)
+    REFERENCES `ratiobasis` (`ID`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB;
+
+
+--
+-- Daten für Tabelle `size`
+--
+
+INSERT INTO `size` (`ID`, `sizeInKB`, `ratiobasisID`) VALUES
+(1, 50, 8),
+(2, 1024, 7),
+(3, 15360, 7),
+(4, 1048576, 6),
+(5, 2147483647, 5);
+
+--
+-- Tabellenstruktur für Tabelle `date`
+--
+CREATE TABLE `date` (
+  `ID` INT NOT NULL AUTO_INCREMENT,
+  `days` INT NOT NULL,
+  `type` ENUM('R', 'A', 'P') NOT NULL DEFAULT 'A' COMMENT 'R = Recycle Bin, A = Anywhere, P = Personal Files',
+  `created` TINYINT NOT NULL,
+  `lastAccess` TINYINT NOT NULL,
+  `ratiobasisID` INT NOT NULL,
+  PRIMARY KEY (`ID`),
+  CONSTRAINT `fk_date_ratiobasis1`
+    FOREIGN KEY (`ratiobasisID`)
+    REFERENCES `ratiobasis` (`ID`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB;
+
+--
+-- Daten für Tabelle `date`
+--
+
+INSERT INTO `date` (`ID`, `days`, `type`, `created`, `lastAccess`, `ratiobasisID`) VALUES
+(1, 60, 'R', 1, 0, 1),
+(2, 30, 'R', 1, 0, 2),
+(3, 14, 'R', 1, 0, 3),
+(4, 1, 'R', 1, 0, 4),
+(5, 999999, 'A', 0, 1, 5),
+(6, 60, 'A', 0, 1, 6),
+(7, 30, 'A', 0, 1, 7),
+(8, 14, 'A', 0, 1, 8),
+(9, 360, 'P', 0, 1, 9),
+(10, 180, 'P', 0, 1, 10);
+
+-- --------------------------------------------------------
+
+--
+-- Tabellenstruktur für Tabelle `folder`
+--
+
+CREATE TABLE `folder` (
   `ID` INT NOT NULL AUTO_INCREMENT,
   `path` VARCHAR(255) NOT NULL,
   `name` VARCHAR(45) NOT NULL,
@@ -61,142 +243,42 @@ CREATE TABLE IF NOT EXISTS `fsc`.`folder` (
   UNIQUE INDEX `name_UNIQUE` (`name` ASC),
   UNIQUE INDEX `idfolder_UNIQUE` (`ID` ASC),
   INDEX `fk_folder_folder1_idx` (`parentFolderID` ASC),
-  CONSTRAINT `fk_folder_file1`
-    FOREIGN KEY (`ID`)
-    REFERENCES `fsc`.`file` (`ID`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION,
   CONSTRAINT `fk_folder_folder1`
     FOREIGN KEY (`parentFolderID`)
-    REFERENCES `fsc`.`folder` (`ID`)
+    REFERENCES `folder` (`ID`)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION)
 ENGINE = InnoDB;
 
-SHOW WARNINGS;
+-- --------------------------------------------------------
 
--- -----------------------------------------------------
--- Table `fsc`.`ratiobasis`
--- -----------------------------------------------------
-DROP TABLE IF EXISTS `fsc`.`ratiobasis` ;
+--
+-- Tabellenstruktur für Tabelle `file`
+--
 
-SHOW WARNINGS;
-CREATE TABLE IF NOT EXISTS `fsc`.`ratiobasis` (
+CREATE TABLE `file` (
   `ID` INT NOT NULL AUTO_INCREMENT,
-  `ratio` DECIMAL NOT NULL,
-  `weight` DECIMAL NOT NULL,
-  `recommendedAction` ENUM('D', 'B', 'N') NULL COMMENT 'D = Delete, B = Backup, N = Nothing, don\\\'t touch!\', null = no specific action recommended by this entry alone',
-  PRIMARY KEY (`ID`))
-ENGINE = InnoDB;
-
-SHOW WARNINGS;
-
--- -----------------------------------------------------
--- Table `fsc`.`filetype`
--- -----------------------------------------------------
-DROP TABLE IF EXISTS `fsc`.`filetype` ;
-
-SHOW WARNINGS;
-CREATE TABLE IF NOT EXISTS `fsc`.`filetype` (
-  `ID` INT NOT NULL AUTO_INCREMENT,
-  `fileending` VARCHAR(20) NOT NULL,
-  `ratiobasisID` INT NOT NULL,
+  `folderID` INT NOT NULL,
+  `name` VARCHAR(45) NOT NULL,
+  `lastAccess` TIMESTAMP NULL,
+  `priority` VARCHAR(45) NULL,
+  `changeDate` TIMESTAMP NULL,
+  `lastSave` TIMESTAMP NULL,
+  `creationDate` TIMESTAMP NULL,
+  `size` INT NOT NULL,
+  `filetype` VARCHAR(45) NOT NULL,
   PRIMARY KEY (`ID`),
-  INDEX `fk_filetype_ratiobasis1_idx` (`ratiobasisID` ASC),
-  CONSTRAINT `fk_filetype_ratiobasis1`
-    FOREIGN KEY (`ratiobasisID`)
-    REFERENCES `fsc`.`ratiobasis` (`ID`)
+  UNIQUE INDEX `idfile_UNIQUE` (`ID` ASC),
+  CONSTRAINT `fk_file_folder1`
+    FOREIGN KEY (`folderID`)
+    REFERENCES `folder` (`ID`)
     ON DELETE NO ACTION
-    ON UPDATE NO ACTION)
+    ON UPDATE NO ACTION
+  )
 ENGINE = InnoDB;
 
-SHOW WARNINGS;
+COMMIT;
 
--- -----------------------------------------------------
--- Table `fsc`.`filename`
--- -----------------------------------------------------
-DROP TABLE IF EXISTS `fsc`.`filename` ;
-
-SHOW WARNINGS;
-CREATE TABLE IF NOT EXISTS `fsc`.`filename` (
-  `ID` INT NOT NULL AUTO_INCREMENT,
-  `name` VARCHAR(255) NOT NULL,
-  `ratiobasisID` INT NOT NULL,
-  PRIMARY KEY (`ID`),
-  UNIQUE INDEX `name_UNIQUE` (`name` ASC),
-  CONSTRAINT `fk_filename_ratiobasis1`
-    FOREIGN KEY (`ratiobasisID`)
-    REFERENCES `fsc`.`ratiobasis` (`ID`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION)
-ENGINE = InnoDB;
-
-SHOW WARNINGS;
-
--- -----------------------------------------------------
--- Table `fsc`.`foldername`
--- -----------------------------------------------------
-DROP TABLE IF EXISTS `fsc`.`foldername` ;
-
-SHOW WARNINGS;
-CREATE TABLE IF NOT EXISTS `fsc`.`foldername` (
-  `ID` INT NOT NULL AUTO_INCREMENT,
-  `name` VARCHAR(255) NOT NULL,
-  `ratiobasisID` INT NOT NULL,
-  PRIMARY KEY (`ID`),
-  UNIQUE INDEX `name_UNIQUE` (`name` ASC),
-  CONSTRAINT `fk_foldername_ratiobasis1`
-    FOREIGN KEY (`ratiobasisID`)
-    REFERENCES `fsc`.`ratiobasis` (`ID`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION)
-ENGINE = InnoDB;
-
-SHOW WARNINGS;
-
--- -----------------------------------------------------
--- Table `fsc`.`date`
--- -----------------------------------------------------
-DROP TABLE IF EXISTS `fsc`.`date` ;
-
-SHOW WARNINGS;
-CREATE TABLE IF NOT EXISTS `fsc`.`date` (
-  `ID` INT NOT NULL AUTO_INCREMENT,
-  `days` INT NOT NULL,
-  `type` ENUM('R', 'A', 'P') NOT NULL DEFAULT 'A' COMMENT 'R = Recycle Bin, A = Anywhere, P = Personal Files',
-  `created` TINYINT NOT NULL,
-  `lastAccess` TINYINT NOT NULL,
-  `ratiobasisID` INT NOT NULL,
-  PRIMARY KEY (`ID`),
-  CONSTRAINT `fk_date_ratiobasis1`
-    FOREIGN KEY (`ratiobasisID`)
-    REFERENCES `fsc`.`ratiobasis` (`ID`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION)
-ENGINE = InnoDB;
-
-SHOW WARNINGS;
-
--- -----------------------------------------------------
--- Table `fsc`.`size`
--- -----------------------------------------------------
-DROP TABLE IF EXISTS `fsc`.`size` ;
-
-SHOW WARNINGS;
-CREATE TABLE IF NOT EXISTS `fsc`.`size` (
-  `ID` INT NOT NULL AUTO_INCREMENT,
-  `sizeInKB` INT NOT NULL,
-  `ratiobasisID` INT NOT NULL,
-  PRIMARY KEY (`ID`),
-  CONSTRAINT `fk_size_ratiobasis1`
-    FOREIGN KEY (`ratiobasisID`)
-    REFERENCES `fsc`.`ratiobasis` (`ID`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION)
-ENGINE = InnoDB;
-
-SHOW WARNINGS;
-
-SET SQL_MODE=@OLD_SQL_MODE;
-SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS;
-SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS;
+/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
+/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
+/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
