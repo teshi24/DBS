@@ -1,7 +1,6 @@
 -- SQL-Dump FileSystemChecker
 --
 -- Host: 127.0.0.1
--- Erstellungszeit: 27. Apr 2023 um 15:59
 -- Server-Version: 10.4.28-MariaDB
 -- PHP-Version: 8.2.4
 
@@ -41,18 +40,18 @@ ENGINE = InnoDB;
 -- Daten für Tabelle `ratiobasis`
 --
 
-INSERT INTO `ratiobasis` (`ratio`, `weight`, `recommendedAction`) VALUES
-(100, 80, 'D'),
-(90, 80, 'D'),
-(80, 80, 'D'),
-(70, 80, 'D'),
-(70, 50, 'D'),
-(60, 50, 'D'),
-(50, 50, 'D'),
-(40, 50, 'D'),
-(80, 50, 'B'),
-(50, 50, 'B'),
-(0, 100, 'N');
+INSERT INTO `ratiobasis` (`ID`, `ratio`, `weight`, `recommendedAction`) VALUES
+(1, 100, 80, 'D'),
+(2, 90, 80, 'D'),
+(3, 80, 80, 'D'),
+(4, 70, 80, 'D'),
+(5, 70, 50, 'D'),
+(6, 60, 50, 'D'),
+(7, 50, 50, 'D'),
+(8, 40, 50, 'D'),
+(9, 80, 50, 'B'),
+(10, 50, 50, 'B'),
+(11, 100, 100, 'N');
 
 -- --------------------------------------------------------
 
@@ -168,8 +167,9 @@ INSERT INTO `foldername` (`ID`, `name`, `ratiobasisID`) VALUES
 --
 CREATE TABLE `size` (
   `ID` INT NOT NULL AUTO_INCREMENT,
-  `sizeInKB` INT NOT NULL,
+  `sizeInBytes` BIGINT NOT NULL,
   `ratiobasisID` INT NOT NULL,
+  `sizeAsString` VARCHAR(20) NOT NULL,
   PRIMARY KEY (`ID`),
   CONSTRAINT `fk_size_ratiobasis1`
     FOREIGN KEY (`ratiobasisID`)
@@ -183,12 +183,13 @@ ENGINE = InnoDB;
 -- Daten für Tabelle `size`
 --
 
-INSERT INTO `size` (`ID`, `sizeInKB`, `ratiobasisID`) VALUES
-(1, 50, 8),
-(2, 1024, 7),
-(3, 15360, 7),
-(4, 1048576, 6),
-(5, 2147483647, 5);
+INSERT INTO `size` (`ID`, `sizeInBytes`, `ratiobasisID`, `sizeAsString`) VALUES
+(1,        51200, 8, "50 KB"),
+(2,      1048576, 7, "1 MB"),
+(3,     15728640, 7, "15 MB"),
+(4,   1073741824, 6, "1 GB"),
+(5,  10737418240, 5, "10 GB"),
+(6, 107374182400, 5, "100 GB");
 
 --
 -- Tabellenstruktur für Tabelle `date`
@@ -234,9 +235,8 @@ CREATE TABLE `folder` (
   `ID` INT NOT NULL AUTO_INCREMENT,
   `path` VARCHAR(255) NOT NULL,
   `name` VARCHAR(45) NOT NULL,
-  `modifyDate` TIMESTAMP NULL,
-  `size` INT NULL COMMENT 'maybe anyway anywhere 0',
-  `type` VARCHAR(45) NULL COMMENT 'maybe anyway everywhere \"Dateiordner\"...',
+  `lastModifiedTSD` TIMESTAMP NULL,
+  `size` BIGINT NULL COMMENT 'maybe anyway anywhere 0',
   `parentFolderID` INT NOT NULL,
   PRIMARY KEY (`ID`),
   UNIQUE INDEX `path_UNIQUE` (`path` ASC),
@@ -260,12 +260,11 @@ CREATE TABLE `file` (
   `ID` INT NOT NULL AUTO_INCREMENT,
   `folderID` INT NOT NULL,
   `name` VARCHAR(45) NOT NULL,
-  `lastAccess` TIMESTAMP NULL,
-  `priority` VARCHAR(45) NULL,
-  `changeDate` TIMESTAMP NULL,
-  `lastSave` TIMESTAMP NULL,
-  `creationDate` TIMESTAMP NULL,
-  `size` INT NOT NULL,
+  `lastAccessedTSD` TIMESTAMP NULL,
+  `lastModifiedTSD` TIMESTAMP NULL,
+  `creationTSD` TIMESTAMP NULL,
+  `sizeInBytes` BIGINT NOT NULL,
+  `sizeAsString` VARCHAR(20) NOT NULL,
   `filetype` VARCHAR(45) NOT NULL,
   PRIMARY KEY (`ID`),
   UNIQUE INDEX `idfile_UNIQUE` (`ID` ASC),
