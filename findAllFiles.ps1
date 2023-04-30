@@ -25,6 +25,11 @@ if(!([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]:
 }
 
 
+$currentFolderID = 0
+[HashTable]$folderIDs = $hash = @{} 
+$maxFolderID = 0
+
+
 Function List-FileMetaData 
 {  
     param([Parameter(Mandatory=$True)][string]$File = $(throw "Parameter -File is required."))
@@ -101,8 +106,9 @@ function preparePrintingOfMetaDataForItem($path) {
     } elseif (Test-Path -Path $path) {
         $hashTable = List-DirMetaData -Dir $path
         $hashTable["parentFolderID"] = $Global:currentFolderID
-        $Global:currentFolderID = $Global:currentFolderID + 1
-        $hashTable["parentFolderID"] = $Global:currentFolderID
+        $Global:maxFolderID = $Global:maxFolderID + 1
+        $hashTable["ID"] = $Global:maxFolderID
+        $Global:folderIDs[$hashTable['path']] = $Global:maxFolderID
 
         $allFolders.Add($hashTable) | out-null
     } else {
@@ -113,9 +119,11 @@ function preparePrintingOfMetaDataForItem($path) {
 function recursiveMetaDataSearch($path) {
     dir -Path $path -ErrorAction SilentlyContinue -Exclude $excludeFolders | %{
         try {
+            if ($Global:folderIDs[$path]) {
+                $Global:currentFolderID = $Global:folderIDs[$path]
+            }
             preparePrintingOfMetaDataForItem($_.FullName)
-
-            if ((isPathToFile($_.FullName))) {
+            if (isPathToFile($_.FullName)) {    
                 return
             }
 
@@ -150,17 +158,21 @@ echo ""
 try {
     $allFiles = [System.Collections.ArrayList]::new()
     $allFolders = [System.Collections.ArrayList]::new()
-    $currentFolderID = 1;
+
+    preparePrintingOfMetaDataForItem($mainDirToAnalyze)
 
     echo "scanning directory"
     echo $mainDirToAnalyze
     echo ""
     dir -Path $mainDirToAnalyze | ForEach-Object {
         $_.FullName
+        if ($Global:folderIDs[$mainDirToAnalyze]) {
+            $Global:currentFolderID = 1
+        }
         preparePrintingOfMetaDataForItem($_.FullName)
         recursiveMetaDataSearch $_.FullName
     }
-
+    echo $currentFolderID
     echo "save output to file"
     echo ""
 
