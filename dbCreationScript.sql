@@ -252,7 +252,7 @@ INSERT INTO `date` (`ID`, `days`, `type`, `created`, `lastAccess`, `ratiobasisID
 CREATE TABLE `folder` (
   `ID` INT NOT NULL AUTO_INCREMENT,
   `path` VARCHAR(255) NOT NULL,
-  `name` VARCHAR(45) NOT NULL,
+  `name` VARCHAR(255) NOT NULL,
   `lastModifiedTSD` TIMESTAMP NULL,
   `parentFolderID` INT NULL,
   PRIMARY KEY (`ID`),
@@ -275,7 +275,8 @@ ENGINE = InnoDB;
 CREATE TABLE `file` (
   `ID` INT NOT NULL AUTO_INCREMENT,
   `folderID` INT NOT NULL,
-  `name` VARCHAR(45) NOT NULL,
+  `folder` VARCHAR(255) NOT NULL,
+  `name` VARCHAR(255) NOT NULL,
   `lastAccessedTSD` TIMESTAMP NULL,
   `lastModifiedTSD` TIMESTAMP NULL,
   `creationTSD` TIMESTAMP NULL,
