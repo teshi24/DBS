@@ -45,13 +45,16 @@ INSERT INTO `ratiobasis` (`ID`, `ratio`, `weight`, `recommendedAction`) VALUES
 (2, 90, 80, 'D'),
 (3, 80, 80, 'D'),
 (4, 70, 80, 'D'),
-(5, 70, 50, 'D'),
-(6, 60, 50, 'D'),
-(7, 50, 50, 'D'),
-(8, 40, 50, 'D'),
-(9, 80, 50, 'B'),
-(10, 50, 50, 'B'),
-(11, 100, 100, 'N');
+(5, 90, 50, 'D'),
+(6, 80, 50, 'D'),
+(7, 70, 50, 'D'),
+(8, 60, 50, 'D'),
+(9, 50, 50, 'D'),
+(10, 40, 50, 'D'),
+(11, 80, 50, 'B'),
+(12, 50, 50, 'B'),
+(13, 100, 100, 'N'),
+(14, 50, 50, 'N');
 
 -- --------------------------------------------------------
 
@@ -77,8 +80,8 @@ ENGINE = InnoDB;
 --
 
 INSERT INTO `filename` (`ID`, `name`, `ratiobasisID`) VALUES
-(1, 'Pagefile.sys', 11),
-(2, 'Swapfile.sys', 11);
+(1, 'Pagefile.sys', 12),
+(2, 'Swapfile.sys', 12);
 
 -- --------------------------------------------------------
 
@@ -108,14 +111,14 @@ INSERT INTO `filetype` (`ID`, `fileending`, `ratiobasisID`) VALUES
 (2, '.log', 2),
 (3, '.tmp', 2),
 (4, '.msi', 2),
-(5, '.png', 9),
-(6, '.jpg', 9),
-(7, '.jpeg', 9),
-(8, '.mp4', 9),
-(9, '.mp3', 9),
-(10, '.docx', 10),
-(11, '.pdf', 10),
-(12, '.pptx', 10);
+(5, '.png', 11),
+(6, '.jpg', 11),
+(7, '.jpeg', 11),
+(8, '.mp4', 11),
+(9, '.mp3', 11),
+(10, '.docx', 12),
+(11, '.pdf', 12),
+(12, '.pptx', 12);
 
 -- --------------------------------------------------------
 
@@ -140,25 +143,35 @@ ENGINE = InnoDB;
 --
 
 INSERT INTO `foldername` (`ID`, `name`, `ratiobasisID`) VALUES
-(1, 'System32', 11),
-(2, 'WinSxS', 11),
-(3, 'System Volume Information', 11),
-(21, 'C:\\Windows\\Temp', 1),
-(22, 'C:\\Windows\\Downloaded Program Files', 1),
-(23, 'C:\\Windows\\LiveKernelReports', 1),
-(24, 'C:\\Program Files\\rempl', 1),
-(25, 'C:\\Users\\%userprofiles%\\Downloads', 1),
-(26, 'C:\\Users\\%userprofiles%\\AppData\\Local\\Google\\Chrome\\User Data\\Default\\Cache', 1),
-(27, 'C:\\Users\\%userprofiles%\\AppData\\Local\\Mozilla\\Firefox', 1),
-(28, 'C:\\Users\\%userprofiles%\\AppData\\Local\\Microsoft\\Internet Explorer\\CacheStorage', 1),
-(29, 'C:\\Windows\\Logs\\CBS', 1),
-(30, 'C:\\Windows\\SoftwareDistribution\\Download', 1),
-(31, 'C:\\Users\\%userprofiles%\\AppData\\Local\\Temp', 1),
-(32, 'C:\\Windows\\Prefetch', 1),
-(33, 'C:\\Users\\%userprofiles%\\AppData\\Local\\CrashDumps', 1),
-(34, 'C:\\ProgramData\\Microsoft\\Windows\\WER\\ReportArchive', 1),
-(35, 'C:\\Users\\%userprofiles%\\Documents', 9),
-(36, 'C:\\Users\\%userprofiles%\\Bilder', 9);
+(1, 'System32', 13),
+(2, 'WinSxS', 13),
+(3, 'System Volume Information', 13),
+(4, 'C:\\Windows\\Temp', 1),
+(5, 'C:\\Windows\\Downloaded Program Files', 1),
+(6, 'C:\\Windows\\LiveKernelReports', 1),
+(7, 'C:\\Program Files\\rempl', 1),
+(8, 'C:\\Users\\%userprofiles%\\Downloads', 1),
+(9, 'C:\\Users\\%userprofiles%\\AppData\\Local\\Google\\Chrome\\User Data\\Default\\Cache', 1),
+(10, 'C:\\Users\\%userprofiles%\\AppData\\Local\\Mozilla\\Firefox', 1),
+(11, 'C:\\Users\\%userprofiles%\\AppData\\Local\\Microsoft\\Internet Explorer\\CacheStorage', 1),
+(12, 'C:\\Windows\\Logs\\CBS', 1),
+(13, 'C:\\Windows\\SoftwareDistribution\\Download', 1),
+(14, 'C:\\Users\\%userprofiles%\\AppData\\Local\\Temp', 1),
+(15, 'C:\\Windows\\Prefetch', 1),
+(16, 'C:\\Users\\%userprofiles%\\AppData\\Local\\CrashDumps', 1),
+(17, 'C:\\ProgramData\\Microsoft\\Windows\\WER\\ReportArchive', 1),
+(18, 'C:\\Users\\%userprofiles%\\Documents', 11),
+(19, 'Temp', 2),
+(20, 'Downloads', 3),
+(21, 'Download', 3),
+(22, 'Cache', 2),
+(23, 'LiveKernelReports', 1),
+(24, 'rempl', 1),
+(25, 'logs', 3),
+(26, 'crashdumps', 1),
+(27, 'reportarchive', 1),
+(28, 'Bilder', 13),
+(29, 'Documents', 13);
 
 -- --------------------------------------------------------
 
@@ -184,11 +197,11 @@ ENGINE = InnoDB;
 --
 
 INSERT INTO `size` (`ID`, `sizeInBytes`, `ratiobasisID`, `sizeAsString`) VALUES
-(1,        51200, 8, "50 KB"),
-(2,      1048576, 7, "1 MB"),
-(3,     15728640, 7, "15 MB"),
-(4,   1073741824, 6, "1 GB"),
-(5,  10737418240, 5, "10 GB"),
+(1,        51200, 10, "50 KB"),
+(2,      1048576, 9, "1 MB"),
+(3,     15728640, 8, "15 MB"),
+(4,   1073741824, 7, "1 GB"),
+(5,  10737418240, 6, "10 GB"),
 (6, 107374182400, 5, "100 GB");
 
 --
@@ -219,11 +232,16 @@ INSERT INTO `date` (`ID`, `days`, `type`, `created`, `lastAccess`, `ratiobasisID
 (3, 14, 'R', 1, 0, 3),
 (4, 1, 'R', 1, 0, 4),
 (5, 999999, 'A', 0, 1, 5),
-(6, 60, 'A', 0, 1, 6),
-(7, 30, 'A', 0, 1, 7),
-(8, 14, 'A', 0, 1, 8),
-(9, 360, 'P', 0, 1, 9),
-(10, 180, 'P', 0, 1, 10);
+(6, 360, 'A', 0, 1, 6),
+(7, 180, 'A', 0, 1, 7),
+(8, 60, 'A', 0, 1, 8),
+(9, 30, 'A', 0, 1, 9),
+(10, 14, 'A', 0, 1, 10),
+(11, 360, 'P', 0, 1, 11),
+(12, 180, 'P', 0, 1, 12),
+(13, 0, 'R', 1, 1, 14),
+(14, 0, 'A', 1, 1, 14),
+(15, 0, 'P', 1, 1, 14);
 
 -- --------------------------------------------------------
 
