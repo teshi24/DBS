@@ -1,6 +1,6 @@
 -- Ziel: finde ratios für folders
 -- FOLDERNAME
--- EXPLAIN
+EXPLAIN
 SELECT F.path, RB.recommendedAction, RB.ratio, RB.weight FROM FOLDER F
 	LEFT JOIN FOLDERNAME FN ON FN.name = F.name
 	LEFT JOIN RATIOBASIS RB ON FN.ratiobasisID = RB.ID
@@ -15,6 +15,10 @@ SELECT F.path, RB.recommendedAction, RB.ratio, RB.weight FROM FOLDER F
 -- 124270 row(s) returned
 -- run 1 0.907 sec / 0.218 sec
 -- run 2 0.859 sec / 0.219 sec
+-- after db indexing
+-- 124270 row(s) returned
+-- run 1 0.860 sec / 0.203 sec
+-- run 2 0.828 sec / 0.203 sec
 
 -- Ziel: finde ratios für 1 file
 -- FILENAME
@@ -41,6 +45,12 @@ SELECT F.name, F.folder, RB.recommendedAction, RB.ratio, RB.weight FROM FILE F
 --       duration  / fetched
 -- run 1 1.750 sec / 0.688 sec
 -- run 2 1.687 sec / 0.703 sec
+-- after db indexing
+-- 483802 row(s) returned
+--       duration  / fetched
+-- run 1 1.875 sec / 0.672 sec
+-- run 2 1.844 sec / 0.703 sec
+-- ! seems even to be worse
 
 -- FOLDERNAME
 -- EXPLAIN 
@@ -67,7 +77,13 @@ SELECT F.name, F.folder, RB.recommendedAction, RB.ratio, RB.weight FROM FILE F
 --       duration  / fetched
 -- run 1 2.141 sec / 0.687 sec
 -- run 2 2.281 sec / 0.703 sec
-    
+-- after db indexing
+-- 483802 row(s) returned
+--       duration  / fetched
+-- run 1 3.157 sec / 1.328 sec
+-- run 2 2.140 sec / 0.703 sec
+-- ! seems even to be worse
+
 -- FILETYPE
 -- EXPLAIN
 SELECT F.name, FO.path, F.filetype, FT.fileending as 'IDENTIFIED FILEENDING',  RB.recommendedAction, RB.ratio, RB.weight FROM FILE F
@@ -92,7 +108,12 @@ SELECT F.name, F.folder, F.filetype, FT.fileending as 'IDENTIFIED FILEENDING',  
 --       duration  / fetched
 -- run 1 1.781 sec / 0.782 sec
 -- run 2 1.938 sec / 0.766 sec
-
+-- after db indexing
+-- 483802 row(s) returned
+--       duration  / fetched
+-- run 1 2.016 sec / 0.765 sec
+-- run 2 2.000 sec / 0.782 sec
+-- ! seems even to be worse
 
 -- SIZE
 -- EXPLAIN
@@ -111,7 +132,7 @@ SELECT F.name, FO.path, F.sizeInBytes, F.sizeAsString, S.sizeInBytes as 'treshho
 -- run 2 48.750 sec / 1.078 sec
 
 -- optimization: using redundancy on file path variable
-EXPLAIN
+-- EXPLAIN
 SELECT F.name, F.folder, F.sizeInBytes, F.sizeAsString, S.sizeInBytes as 'treshhold sizeInBytes', S.sizeAsString as 'treshhold sizeAsString', RB.recommendedAction, RB.ratio, RB.weight
  FROM FILE F
 	LEFT JOIN SIZE S ON F.sizeInBytes <= S.sizeInBytes
@@ -124,6 +145,14 @@ SELECT F.name, F.folder, F.sizeInBytes, F.sizeAsString, S.sizeInBytes as 'treshh
 --       duration  / fetched
 -- run 1 19.656 sec / 1.172 sec
 -- run 2 19.250 sec / 1.187 sec
+-- after db indexing
+-- 458733 row(s) returned
+--       duration  / fetched
+-- run 1 27.516 sec / 1.203 sec
+-- run 2 24.313 sec / 1.203 sec
+-- ! seems even to be worse
+
+-- TODO: extract explain statements again for optimization round 3 - after db indexing
 
 -- DATE - last accessed (first without checking fileloccation)
 -- EXPLAIN
@@ -164,6 +193,7 @@ ORDER BY differenceToToday desc, ISNULL(RB.ratio), RB.ratio desc, RB.weight desc
 -- optimization: using materalized table
 DROP TABLE IF EXISTS fileDataWithMinDaysReference;
 CREATE TABLE fileDataWithMinDaysReference AS 
+-- ; explain
 SELECT F.name, F.folder, F.lastAccessedTSD, DATEDIFF(NOW(), F.lastAccessedTSD) as differenceToToday, min(D.days) as minDays FROM FILE F
 		LEFT JOIN date D on D.lastAccess = 1 and DATEDIFF(NOW(), F.lastAccessedTSD) <= D.days
 		GROUP BY F.name, F.folder, F.lastAccessedTSD;
@@ -176,7 +206,7 @@ SELECT F.name, F.folder, F.lastAccessedTSD, DATEDIFF(NOW(), F.lastAccessedTSD) a
 
 -- EXPLAIN
 SELECT filedata.folder, filedata.name, filedata.lastAccessedTSD, fileData.differenceToToday, D.days as 'treshhold days', RB.recommendedAction, RB.ratio, RB.weight from date D
-JOIN fileDataWithMinDaysReference fileData on D.days = minDays and D.lastAccess = 1
+JOIN fileDataWithMinDaysReference fileData on D.days = fileData.minDays and D.lastAccess = 1
 LEFT JOIN ratiobasis rb on D.ratiobasisId = rb.ID 
 GROUP BY fileData.name, fileData.folder, fileData.lastAccessedTSD, fileData.differenceToToday, D.ratiobasisId, D.days
 ORDER BY differenceToToday desc, ISNULL(RB.ratio), RB.ratio desc, RB.weight desc, recommendedAction, filedata.folder, filedata.name;
@@ -185,3 +215,20 @@ ORDER BY differenceToToday desc, ISNULL(RB.ratio), RB.ratio desc, RB.weight desc
 --       duration  / fetched
 -- run 1 10.094 sec / 3.578 sec
 -- run 2 9.953 sec / 3.594 sec
+-- after db indexing
+-- 457100 row(s) returned
+--       duration  / fetched
+-- run 1 15.922 sec / 3.531 sec
+-- run 2 14.609 sec / 3.578 sec
+-- ! seems even to be worse
+
+
+CREATE INDEX `ix_filename_folder` on file(`name`, `folder` ASC);
+CREATE INDEX IX_FILE_NAME ON FILE(name);
+CREATE INDEX IX_FILE_FILETYPE ON FILE(filetype);
+CREATE INDEX IX_FILE_SIZEINBYTES ON FILE(sizeInBytes);
+CREATE INDEX IX_DATE_DAYS ON DATE(days);
+CREATE INDEX IX_FOLDER_NAME ON FOLDER(name);
+CREATE INDEX IX_FILETYPE_FILEENDING ON FILETYPE(fileending);
+CREATE INDEX IX_SIZE_SIZEINBYTES ON SIZE(sizeInBytes);
+CREATE INDEX IX_filedatawithmindaysreference_MINDAYS ON filedatawithmindaysreference(minDays);
