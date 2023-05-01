@@ -1,4 +1,4 @@
-﻿$mainDirToAnalyze = "D:\"
+﻿$mainDirToAnalyze = "C:\"
 $xamppMysqlDataFolder = "C:\xampp\mysql\data\"
 $outputFileForFileMetaData = $xamppMysqlDataFolder + "DBS_file_analysis.csv"
 $outputFileForDirMetaData = $xamppMysqlDataFolder + "DBS_folder_analysis.csv"
@@ -26,9 +26,9 @@ if(!([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]:
 }
 
 
-$currentFolderID = 0
+$currentFolderID = 7708
 [HashTable]$folderIDs = $hash = @{} 
-$maxFolderID = 0
+$maxFolderID = 7708
 
 
 function formatPath($path) {
