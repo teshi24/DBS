@@ -238,8 +238,7 @@ CREATE TABLE `folder` (
   `lastModifiedTSD` TIMESTAMP NULL,
   `parentFolderID` INT NULL,
   PRIMARY KEY (`ID`),
-  UNIQUE INDEX `path_UNIQUE` (`path` ASC),
-  UNIQUE INDEX `name_UNIQUE` (`name` ASC),
+  UNIQUE INDEX `path_name_UNIQUE` (`path`, `name` ASC),
   UNIQUE INDEX `idfolder_UNIQUE` (`ID` ASC),
   INDEX `fk_folder_folder1_idx` (`parentFolderID` ASC),
   CONSTRAINT `fk_folder_folder1`

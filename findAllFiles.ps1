@@ -1,6 +1,7 @@
 ﻿$mainDirToAnalyze = "D:\"
-$outputFileForFileMetaData = "D:\DBS_output_files.csv"
-$outputFileForDirMetaData = "D:\DBS_output_folders.csv"
+$xamppMysqlDataFolder = "C:\xampp\mysql\data\"
+$outputFileForFileMetaData = $xamppMysqlDataFolder + "DBS_file_analysis.csv"
+$outputFileForDirMetaData = $xamppMysqlDataFolder + "DBS_folder_analysis.csv"
 
 [string[]]$excludeFolders = @(
 ".gradle",
@@ -30,6 +31,17 @@ $currentFolderID = 0
 $maxFolderID = 0
 
 
+function formatPath($path) {
+    return ($path -replace '\\', '\\')
+}
+
+function resetCurrentFolderID($path) {
+    $currentFolder = $Global:folderIDs[$(formatPath($path))]
+    if ($currentFolder) {
+        $Global:currentFolderID = $currentFolder
+    }
+}
+
 Function List-FileMetaData 
 {  
     param([Parameter(Mandatory=$True)][string]$File = $(throw "Parameter -File is required."))
@@ -44,7 +56,7 @@ Function List-FileMetaData
         $folderobj = $shellobj.namespace($pathname)
         $fileobj = $folderobj.parsename($filename)
 
-        $hash['folder'] =  $folderobj.getDetailsOf($fileobj, 191)
+        $hash['folder'] = formatPath($folderobj.getDetailsOf($fileobj, 191))
         $hash['name'] = $fileobj.name()
         $hash['lastAccessedTSD'] = $folderobj.getDetailsOf($fileobj, 5)
         $hash['lastModifiedTSD'] = $fileobj.modifyDate()
@@ -80,7 +92,7 @@ Function List-DirMetaData
         
         $hash['name'] = $folderSelf.name()
         $hash['lastModifiedTSD'] = $folderSelf.modifyDate()
-        $hash['path'] = $folderSelf.path()
+        $hash['path'] = formatPath($folderSelf.path())
         #$hash['size'] = $folderSelf.size()
         #$hash['type'] = $folderSelf.type()
 
@@ -98,11 +110,20 @@ function isPathToFile($path) {
   return (Test-Path -Path $path -PathType Leaf);
 }
 
+function preparePrintingOfMetaDataForRootDir($path) {
+    $hashTable = List-DirMetaData -Dir $path
+    $hashTable["parentFolderID"] = ""
+    $Global:maxFolderID = $Global:maxFolderID + 1
+    $hashTable["ID"] = $Global:maxFolderID
+    $Global:folderIDs[$hashTable['path']] = $Global:maxFolderID
+    $Global:allFolders.Add($hashTable) | out-null
+}
+
 function preparePrintingOfMetaDataForItem($path) {
     if (isPathToFile($path)) {
         $hashTable = List-FileMetaData -File $path
         $hashTable["folderID"] = $Global:currentFolderID
-        $allFiles.Add($hashTable) | out-null
+        $Global:allFiles.Add($hashTable) | out-null
     } elseif (Test-Path -Path $path) {
         $hashTable = List-DirMetaData -Dir $path
         $hashTable["parentFolderID"] = $Global:currentFolderID
@@ -110,7 +131,7 @@ function preparePrintingOfMetaDataForItem($path) {
         $hashTable["ID"] = $Global:maxFolderID
         $Global:folderIDs[$hashTable['path']] = $Global:maxFolderID
 
-        $allFolders.Add($hashTable) | out-null
+        $Global:allFolders.Add($hashTable) | out-null
     } else {
         throw "Path not recognized and ignored (probably containing unallowed characters, such as '[]'): " + $path
     }
@@ -119,9 +140,7 @@ function preparePrintingOfMetaDataForItem($path) {
 function recursiveMetaDataSearch($path) {
     dir -Path $path -ErrorAction SilentlyContinue -Exclude $excludeFolders | %{
         try {
-            if ($Global:folderIDs[$path]) {
-                $Global:currentFolderID = $Global:folderIDs[$path]
-            }
+            resetCurrentFolderID($path)
             preparePrintingOfMetaDataForItem($_.FullName)
             if (isPathToFile($_.FullName)) {    
                 return
@@ -154,21 +173,20 @@ echo ""
 echo "FYI: NTFS Option DisableLastAccess has been changed from ${ValueOfDisableLastAccessBeforeScript} to ${tempValueOfDisableLastAccess}, to ensure that the value 'Last Access' is not currupted by executing this script."
 echo "     Note: If you stop this script for any reason by yourself before it sais is finished, you need to take care of the cleanup yourself."
 echo ""
-
+$allFiles = [System.Collections.ArrayList]::new()
+$allFolders = [System.Collections.ArrayList]::new()
 try {
-    $allFiles = [System.Collections.ArrayList]::new()
-    $allFolders = [System.Collections.ArrayList]::new()
 
-    preparePrintingOfMetaDataForItem($mainDirToAnalyze)
+    preparePrintingOfMetaDataForRootDir($mainDirToAnalyze)
 
     echo "scanning directory"
     echo $mainDirToAnalyze
     echo ""
     dir -Path $mainDirToAnalyze | ForEach-Object {
         $_.FullName
-        if ($Global:folderIDs[$mainDirToAnalyze]) {
-            $Global:currentFolderID = 1
-        }
+
+        resetCurrentFolderID($mainDirToAnalyze)
+
         preparePrintingOfMetaDataForItem($_.FullName)
         recursiveMetaDataSearch $_.FullName
     }
