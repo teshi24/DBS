@@ -1,0 +1,4 @@
+id,select_type,table,type,possible_keys,key,key_len,ref,rows,Extra
+1,SIMPLE,F,index,NULL,path_name_UNIQUE,904,NULL,124321,"Using index; Using temporary; Using filesort"
+1,SIMPLE,FN,eq_ref,name_UNIQUE,name_UNIQUE,767,fsc.F.name,1,"Using where"
+1,SIMPLE,RB,eq_ref,PRIMARY,PRIMARY,4,fsc.FN.ratiobasisID,1,"Using where"

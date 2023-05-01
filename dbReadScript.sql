@@ -161,3 +161,27 @@ ORDER BY differenceToToday desc, ISNULL(RB.ratio), RB.ratio desc, RB.weight desc
 -- run 1 48.203 sec / 3.734 sec
 -- run 2 48.875 sec / 3.641 sec
 
+-- optimization: using materalized table
+DROP TABLE IF EXISTS fileDataWithMinDaysReference;
+CREATE TABLE fileDataWithMinDaysReference AS 
+SELECT F.name, F.folder, F.lastAccessedTSD, DATEDIFF(NOW(), F.lastAccessedTSD) as differenceToToday, min(D.days) as minDays FROM FILE F
+		LEFT JOIN date D on D.lastAccess = 1 and DATEDIFF(NOW(), F.lastAccessedTSD) <= D.days
+		GROUP BY F.name, F.folder, F.lastAccessedTSD;
+-- 21:25:18	DROP TABLE IF EXISTS fileDataWithMinDaysReference
+-- 21:25:18	CREATE TABLE fileDataWithMinDaysReference AS  SELECT F.name, F.folder, F.lastAccessedTSD, DATEDIFF(NOW(), F.lastAccessedTSD) as differenceToToday, min(innerD.days) as minDays   FROM FILE F   LEFT JOIN date innerD on innerD.lastAccess = 1 and DATEDIFF(NOW(), F.lastAccessedTSD) <= innerD.days   GROUP BY F.name, F.folder, F.lastAccessedTSD	
+-- 456129 row(s) affected - Records: 456129  Duplicates: 0  Warnings: 0
+--       duration drop table / duration table creation
+-- run 1           0.016 sec / 25.953 sec
+-- run 2           0.015 sec / 26.297 sec
+
+-- EXPLAIN
+SELECT filedata.folder, filedata.name, filedata.lastAccessedTSD, fileData.differenceToToday, D.days as 'treshhold days', RB.recommendedAction, RB.ratio, RB.weight from date D
+JOIN fileDataWithMinDaysReference fileData on D.days = minDays and D.lastAccess = 1
+LEFT JOIN ratiobasis rb on D.ratiobasisId = rb.ID 
+GROUP BY fileData.name, fileData.folder, fileData.lastAccessedTSD, fileData.differenceToToday, D.ratiobasisId, D.days
+ORDER BY differenceToToday desc, ISNULL(RB.ratio), RB.ratio desc, RB.weight desc, recommendedAction, filedata.folder, filedata.name;
+-- 21:30:17	SELECT filedata.folder, filedata.name, filedata.lastAccessedTSD, fileData.differenceToToday, D.days as 'treshhold days', RB.recommendedAction, RB.ratio, RB.weight from date D JOIN fileDataWithMinDaysReference fileData on D.days = minDays and D.lastAccess = 1 LEFT JOIN ratiobasis rb on D.ratiobasisId = rb.ID  GROUP BY fileData.name, fileData.folder, fileData.lastAccessedTSD, fileData.differenceToToday, D.ratiobasisId, D.days ORDER BY differenceToToday desc, ISNULL(RB.ratio), RB.ratio desc, RB.weight desc, recommendedAction, filedata.folder, filedata.name
+-- 457100 row(s) returned
+--       duration  / fetched
+-- run 1 10.094 sec / 3.578 sec
+-- run 2 9.953 sec / 3.594 sec
