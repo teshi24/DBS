@@ -1,4 +1,7 @@
  set profiling = 1;
+
+-- check indizes which should be deleted
+
 -- CREATE UNIQUE INDEX IX_RATIOS ON RATIOBASIS(ratio, weight, recommendedAction);
 -- DROP INDEX IX_RATIOS ON RATIOBASIS;
 -- CREATE INDEX IX_RATIOBASIS_RATIO ON RATIOBASIS(ratio);
@@ -22,9 +25,26 @@
 -- drop index IX_size_sizeInBytes on SIZE;
 -- drop index IX_file_sizeInBytes on file;
 
+
+-- create index ix_ratiobasis_isNullRatio_weight on ratiobasis(ratio asc, weight desc);
+-- create index ix_file_filetype on file (filetype asc);
+-- create index ix_filetype_fileending on filetype (fileending asc);
+-- create index ix_file_sizeInBytes on file(sizeinBytes asc);
+-- create index ix_file_group on file(name asc, folder asc);
+-- create index ix_file_groupWithSize on file(name asc, folder asc, sizeInBytes asc);
+-- create index ix_size_sizeinbytes on size(sizeInBytes asc);
+-- create index ix_file_groupWithLastAccessed on file(name asc, folder asc, lastAccessedTSD asc);
+-- create index ix_date_lastAccess_days on date(lastAccess, days asc);
+
+
+-- möglichst einschränken 
+-- > erst ganz am schluss left join auf die Files wos nötig ist
+-- Funktionen im Where und Order by sparsam
+-- zwischentabellen brauchen keine sortierung, eigenentlich nur am schluss
+
 -- Ziel: finde ratios für folders
 -- FOLDERNAME
--- EXPLAIN
+--  EXPLAIN
 SELECT F.path, RB.recommendedAction, RB.ratio, RB.weight FROM FOLDER F
 	LEFT JOIN FOLDERNAME FN ON FN.name = F.name
 	LEFT JOIN RATIOBASIS RB ON FN.ratiobasisID = RB.ID
@@ -67,10 +87,13 @@ SELECT F.name, F.folder, F.filetype, FT.fileending as 'IDENTIFIED FILEENDING',  
 --     Having min(S.sizeInBytes) = S.sizeInBytes
 -- 	   ORDER BY ISNULL(RB.ratio) asc, RB.weight desc, F.sizeInBytes desc;
     
+    
+-- having mit funktionen - ist performance engpass, analog zum where --> minimums agreggieren
+    
 -- further improvement with different table
 DROP TABLE IF EXISTS fileDataWithMinSizeReference;
 CREATE TABLE fileDataWithMinSizeReference AS 
--- ; explain
+-- explain
 SELECT F.name, F.folder, F.sizeInBytes, F.sizeAsString, S.sizeInBytes as minSizeInBytes
  FROM FILE F
 	LEFT JOIN SIZE S ON F.sizeInBytes <= S.sizeInBytes
@@ -89,11 +112,13 @@ SELECT filedata.name, filedata.folder, filedata.sizeInBytes, filedata.sizeAsStri
 
 -- DATE - last accessed (first without checking fileloccation)
 -- optimization: using materalized table
-DROP TABLE IF EXISTS fileDataWithMinDaysReference;
-CREATE TABLE fileDataWithMinDaysReference AS 
--- ; explain
+ DROP TABLE IF EXISTS fileDataWithMinDaysReference;
+ CREATE TABLE fileDataWithMinDaysReference AS 
+-- ;
+-- explain
 SELECT F.name, F.folder, F.lastAccessedTSD, DATEDIFF(NOW(), F.lastAccessedTSD) as differenceToToday, min(D.days) as minDays FROM FILE F
 		LEFT JOIN date D on D.lastAccess = 1 and DATEDIFF(NOW(), F.lastAccessedTSD) <= D.days
+        -- todo: hier datediff anders berechnen um index zu nutzen
 		GROUP BY F.name, F.folder, F.lastAccessedTSD;
 -- created index for improving performance
 CREATE INDEX ix_filedata_minDays on  fileDataWithMinDaysReference(minDays);
@@ -104,7 +129,7 @@ from date D
 JOIN fileDataWithMinDaysReference fileData on D.days = fileData.minDays and D.lastAccess = 1
 LEFT JOIN ratiobasis rb on D.ratiobasisId = rb.ID 
 -- GROUP BY fileData.name, fileData.folder, fileData.lastAccessedTSD, fileData.differenceToToday, D.ratiobasisId, D.days -- not necessary, sice it is already "grouped" in filedata with reference
-ORDER BY differenceToToday desc, ISNULL(RB.ratio) asc, RB.weight desc, filedata.folder, filedata.name;
+ORDER BY differenceToToday desc, ISNULL(RB.ratio) asc, RB.weight desc, filedata.name, filedata.folder;
 
 show profiles;
  -- show profile for query 1;
