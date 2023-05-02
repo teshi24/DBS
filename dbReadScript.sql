@@ -117,14 +117,20 @@ SELECT F.name, F.folder, F.filetype, FT.fileending as 'IDENTIFIED FILEENDING',  
 
 -- SIZE
 -- EXPLAIN
-SELECT F.name, FO.path, F.sizeInBytes, F.sizeAsString, S.sizeInBytes as 'treshhold sizeInBytes', S.sizeAsString as 'treshhold sizeAsString', RB.recommendedAction, RB.ratio, RB.weight
- FROM FILE F
-	LEFT JOIN FOLDER FO ON F.folderID = FO.ID
-	LEFT JOIN SIZE S ON F.sizeInBytes <= S.sizeInBytes
-	LEFT JOIN RATIOBASIS RB ON S.ratiobasisID = RB.ID
-    GROUP BY F.name, FO.path, F.sizeInBytes, F.sizeAsString
-    Having min(S.sizeInBytes) = S.sizeInBytes
-	ORDER BY ISNULL(RB.ratio), RB.ratio desc, RB.weight desc, recommendedAction, F.sizeInBytes desc;
+SELECT F.name, FO.path, F.sizeInBytes, F.sizeAsString, 
+       S.sizeInBytes as 'treshhold sizeInBytes',
+       S.sizeAsString as 'treshhold sizeAsString',
+       RB.recommendedAction, RB.ratio, RB.weight
+       FROM FILE F
+LEFT JOIN FOLDER FO ON F.folderID = FO.ID
+LEFT JOIN SIZE S ON F.sizeInBytes <= S.sizeInBytes
+LEFT JOIN RATIOBASIS RB ON S.ratiobasisID = RB.ID
+GROUP BY F.name, FO.path, F.sizeInBytes, F.sizeAsString
+		 HAVING min(S.sizeInBytes) = S.sizeInBytes
+ORDER BY ISNULL(RB.ratio), RB.ratio desc, RB.weight desc,
+		 recommendedAction, F.sizeInBytes desc;
+
+
 -- 20:19:11	SELECT F.name, FO.path, F.sizeInBytes, F.sizeAsString, S.sizeInBytes as 'treshhold sizeInBytes', S.sizeAsString as 'treshhold sizeAsString', RB.recommendedAction, RB.ratio, RB.weight  FROM FILE F  LEFT JOIN FOLDER FO ON F.folderID = FO.ID  LEFT JOIN SIZE S ON F.sizeInBytes <= S.sizeInBytes  LEFT JOIN RATIOBASIS RB ON S.ratiobasisID = RB.ID     GROUP BY F.name, FO.path, F.sizeInBytes, F.sizeAsString     Having min(S.sizeInBytes) = S.sizeInBytes  ORDER BY ISNULL(RB.ratio), RB.ratio desc, RB.weight desc, recommendedAction, F.sizeInBytes desc
 -- 410108 row(s) returned
 --       duration  / fetched
@@ -174,16 +180,28 @@ ORDER BY ISNULL(RB.ratio), RB.ratio desc, RB.weight desc, recommendedAction, fil
 
 -- optimization: using redundancy on file path variable
 -- EXPLAIN
-SELECT filedata.folder, filedata.name, filedata.lastAccessedTSD, fileData.differenceToToday, D.days as 'treshhold days', RB.recommendedAction, RB.ratio, RB.weight from date D
+
+SELECT filedata.folder, filedata.name, filedata.lastAccessedTSD, 
+       fileData.differenceToToday, D.days as 'treshhold days', 
+       RB.recommendedAction, RB.ratio, RB.weight 
+       from date D
 JOIN (
-	SELECT F.name, F.folder, F.lastAccessedTSD, DATEDIFF(NOW(), F.lastAccessedTSD) as differenceToToday, min(innerD.days) as minDays
-		FROM FILE F
-		LEFT JOIN date innerD on innerD.lastAccess = 1 and DATEDIFF(NOW(), F.lastAccessedTSD) <= innerD.days
+		SELECT F.name, F.folder, F.lastAccessedTSD,
+			   DATEDIFF(NOW(), F.lastAccessedTSD) as differenceToToday,
+			   min(innerD.days) as minDays
+			   FROM FILE F
+		LEFT JOIN date innerD on innerD.lastAccess = 1 
+					and DATEDIFF(NOW(), F.lastAccessedTSD) <= innerD.days
 		GROUP BY F.name, F.folder, F.lastAccessedTSD
-    ) fileData on D.days = minDays and D.lastAccess = 1
+	) fileData on D.days = minDays and D.lastAccess = 1
 LEFT JOIN ratiobasis rb on D.ratiobasisId = rb.ID 
-GROUP BY fileData.name, fileData.folder, fileData.lastAccessedTSD, fileData.differenceToToday, D.ratiobasisId, D.days
-ORDER BY differenceToToday desc, ISNULL(RB.ratio), RB.ratio desc, RB.weight desc, recommendedAction, filedata.folder, filedata.name;
+GROUP BY fileData.name, fileData.folder, fileData.lastAccessedTSD, 
+		 fileData.differenceToToday, D.ratiobasisId, D.days
+ORDER BY differenceToToday desc, ISNULL(RB.ratio), RB.ratio desc, 
+		 RB.weight desc, recommendedAction, filedata.folder, filedata.name;
+         
+         
+         
 -- 21:03:34	SELECT filedata.folder, filedata.name, filedata.lastAccessedTSD, fileData.differenceToToday, D.days as 'treshhold days', RB.recommendedAction, RB.ratio, RB.weight from date D JOIN (  SELECT F.name, F.folder, F.lastAccessedTSD, DATEDIFF(NOW(), F.lastAccessedTSD) as differenceToToday, min(innerD.days) as minDays   FROM FILE F   LEFT JOIN date innerD on innerD.lastAccess = 1 and DATEDIFF(NOW(), F.lastAccessedTSD) <= innerD.days   GROUP BY F.name, F.folder, F.lastAccessedTSD     ) fileData on D.days = minDays and D.lastAccess = 1 LEFT JOIN ratiobasis rb on D.ratiobasisId = rb.ID  GROUP BY fileData.name, fileData.folder, fileData.lastAccessedTSD, fileData.differenceToToday, D.ratiobasisId, D.days ORDER BY differenceToToday desc, ISNULL(RB.ratio), RB.ratio desc, RB.weight desc, recommendedAction, filedata.folder, filedata.name
 -- 457100 row(s) returned
 --       duration  / fetched
@@ -223,25 +241,25 @@ ORDER BY differenceToToday desc, ISNULL(RB.ratio), RB.ratio desc, RB.weight desc
 -- ! seems even to be worse
 
 
-CREATE INDEX `ix_filename_folder` on file(`name`, `folder` ASC);
-CREATE INDEX IX_FILE_NAME ON FILE(name);
-CREATE INDEX IX_FILE_FILETYPE ON FILE(filetype);
-CREATE INDEX IX_FILE_SIZEINBYTES ON FILE(sizeInBytes);
-CREATE INDEX IX_DATE_DAYS ON DATE(days);
-CREATE INDEX IX_FOLDER_NAME ON FOLDER(name);
-CREATE INDEX IX_FILETYPE_FILEENDING ON FILETYPE(fileending);
-CREATE INDEX IX_SIZE_SIZEINBYTES ON SIZE(sizeInBytes);
-CREATE INDEX IX_filedatawithmindaysreference_MINDAYS ON filedatawithmindaysreference(minDays);
+-- CREATE INDEX `ix_filename_folder` on file(`name`, `folder` ASC);
+-- CREATE INDEX IX_FILE_NAME ON FILE(name);
+-- CREATE INDEX IX_FILE_FILETYPE ON FILE(filetype);
+-- CREATE INDEX IX_FILE_SIZEINBYTES ON FILE(sizeInBytes);
+-- CREATE INDEX IX_DATE_DAYS ON DATE(days);
+-- CREATE INDEX IX_FOLDER_NAME ON FOLDER(name);
+-- CREATE INDEX IX_FILETYPE_FILEENDING ON FILETYPE(fileending);
+-- CREATE INDEX IX_SIZE_SIZEINBYTES ON SIZE(sizeInBytes);
+-- CREATE INDEX IX_filedatawithmindaysreference_MINDAYS ON filedatawithmindaysreference(minDays);
 
-DROP INDEX IX_FILENAME_FOLDER ON file;
-DROP INDEX IX_FILE_NAME ON file;
-DROP INDEX IX_FILE_FILETYPE ON file;
-DROP INDEX IX_FILE_SIZEINBYTES ON file;
-DROP INDEX IX_DATE_DAYS ON date;
-DROP INDEX IX_FOLDER_NAME ON folder;
-DROP INDEX IX_FILETYPE_FILEENDING ON filetype;
-DROP INDEX IX_SIZE_SIZEINBYTES ON SIZE;
-DROP INDEX IX_filedatawithmindaysreference_MINDAYS ON filedatawithmindaysreference;
-DROP INDEX IX_RATIOS ON RATIOBASIS;
+-- DROP INDEX IX_FILENAME_FOLDER ON file;
+-- DROP INDEX IX_FILE_NAME ON file;
+-- DROP INDEX IX_FILE_FILETYPE ON file;
+-- DROP INDEX IX_FILE_SIZEINBYTES ON file;
+-- DROP INDEX IX_DATE_DAYS ON date;
+-- DROP INDEX IX_FOLDER_NAME ON folder;
+-- DROP INDEX IX_FILETYPE_FILEENDING ON filetype;
+-- DROP INDEX IX_SIZE_SIZEINBYTES ON SIZE;
+-- DROP INDEX IX_filedatawithmindaysreference_MINDAYS ON filedatawithmindaysreference;
+-- DROP INDEX IX_RATIOS ON RATIOBASIS;
 
-CREATE UNIQUE INDEX IX_RATIOS ON RATIOBASIS(ratio, weight, recommendedAction);
+-- CREATE UNIQUE INDEX IX_RATIOS ON RATIOBASIS(ratio, weight, recommendedAction);

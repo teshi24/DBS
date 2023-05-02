@@ -80,7 +80,7 @@ SELECT F.name, F.folder, F.sizeInBytes, F.sizeAsString, S.sizeInBytes as minSize
 -- CREATE INDEX ix_fileDataWithMinSizeReference_sizeInBytes on  fileDataWithMinSizeReference(sizeInBytes);
 CREATE INDEX ix_fileDataWithMinSizeReference_minSizeInBytes on  fileDataWithMinSizeReference(minSizeInBytes);
 
--- explain
+--  explain
 SELECT filedata.name, filedata.folder, filedata.sizeInBytes, filedata.sizeAsString, S.sizeInBytes as 'treshhold sizeInBytes', S.sizeAsString as 'treshhold sizeAsString', RB.recommendedAction, RB.ratio, RB.weight
 	FROM size s
 	JOIN fileDataWithMinSizeReference filedata ON filedata.minSizeInBytes = S.sizeInBytes
@@ -117,4 +117,4 @@ show profiles;
  -- show profile for query 8;
  -- show profile for query 9;
  
- set profiling = 0;
+set profiling = 0;
