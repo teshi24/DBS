@@ -1,0 +1,36 @@
+Query_ID,Duration,Query
+1,0.02739650,"CREATE INDEX IX_RATIOBASIS_RATIO ON RATIOBASIS(ratio)"
+2,0.01471350,"CREATE INDEX IX_RATIOBASIS_weight ON RATIOBASIS(weight)"
+3,0.01497060,"CREATE INDEX IX_RATIOBASIS_recommendedAction ON RATIOBASIS(recommendedAction)"
+4,1.01530740,"SELECT F.path, RB.recommendedAction, RB.ratio, RB.weight FROM FOLDER F
+	LEFT JOIN FOLDERNAME FN ON FN.name = F.name
+	LEFT JOIN RATIOBASIS RB ON FN.ratiobasisID = RB.ID
+	ORDER BY ISNULL(RB.ratio), RB.ratio desc, RB.weight desc, recommendedAction"
+5,2.10659710,"SELECT F.name, F.folder, RB.recommendedAction, RB.ratio, RB.weight FROM FILE F
+	LEFT JOIN FILENAME FN ON F.name = FN.name
+	LEFT JOIN RATIOBASIS RB ON FN.ratiobasisID = RB.ID
+	ORDER BY ISNULL(RB.ratio), RB.ratio desc, RB.weight desc, recommendedAction"
+6,2.62618800,"SELECT F.name, F.folder, RB.recommendedAction, RB.ratio, RB.weight FROM FILE F
+	LEFT JOIN FOLDER FO ON F.folderID = FO.ID
+	LEFT JOIN FOLDERNAME FN ON FN.name = FO.name
+	LEFT JOIN RATIOBASIS RB ON FN.ratiobasisID = RB.ID
+	ORDER BY ISNULL(RB.ratio), RB.ratio desc, RB.weight desc, recommendedAction"
+7,2.25317230,"SELECT F.name, F.folder, F.filetype, FT.fileending as 'IDENTIFIED FILEENDING',  RB.recommendedAction, RB.ratio, RB.weight FROM FILE F
+	LEFT JOIN FILETYPE FT ON F.filetype = FT.fileending
+	LEFT JOIN RATIOBASIS RB ON FT.ratiobasisID = RB.ID
+	ORDER BY ISNULL(RB.ratio), RB.ratio desc, RB.weight desc, re"
+8,15.91725880,"SELECT F.name, F.folder, F.sizeInBytes, F.sizeAsString, S.sizeInBytes as 'treshhold sizeInBytes', S.sizeAsString as 'treshhold sizeAsString', RB.recommendedAction, RB.ratio, RB.weight
+ FROM FILE F
+	LEFT JOIN SIZE S ON F.sizeInBytes <= S.sizeInBytes
+	LEFT JOIN RATIOBASIS RB ON S.ratiobasisID = RB.ID
+"
+9,0.01128460,"DROP TABLE IF EXISTS fileDataWithMinDaysReference"
+10,25.52532580,"CREATE TABLE fileDataWithMinDaysReference AS 
+-- ; explain
+SELECT F.name, F.folder, F.lastAccessedTSD, DATEDIFF(NOW(), F.lastAccessedTSD) as differenceToToday, min(D.days) as minDays FROM FILE F
+		LEFT JOIN date D on D.lastAccess = 1 and DATEDIFF(NOW(), F.lastAccessedTSD) <= D.days
+		GROUP BY F.name"
+11,0.00014450,"SHOW WARNINGS"
+12,17.58032980,"SELECT filedata.folder, filedata.name, filedata.lastAccessedTSD, fileData.differenceToToday, D.days as 'treshhold days', RB.recommendedAction, RB.ratio, RB.weight from date D
+JOIN fileDataWithMinDaysReference fileData on D.days = fileData.minDays and D.lastAccess = 1
+LEFT JOIN ratiobasis rb on D.rat"

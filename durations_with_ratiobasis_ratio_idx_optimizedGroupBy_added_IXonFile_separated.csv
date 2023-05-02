@@ -1,0 +1,33 @@
+Query_ID,Duration,Query
+1,0.94692070,"SELECT F.path, RB.recommendedAction, RB.ratio, RB.weight FROM FOLDER F
+	LEFT JOIN FOLDERNAME FN ON FN.name = F.name
+	LEFT JOIN RATIOBASIS RB ON FN.ratiobasisID = RB.ID
+	ORDER BY ISNULL(RB.ratio) asc, RB.weight desc"
+2,2.12935520,"SELECT F.name, F.folder, RB.recommendedAction, RB.ratio, RB.weight FROM FILE F
+	LEFT JOIN FILENAME FN ON F.name = FN.name
+	LEFT JOIN RATIOBASIS RB ON FN.ratiobasisID = RB.ID
+	ORDER BY ISNULL(RB.ratio) asc, RB.weight desc"
+3,2.53277560,"SELECT F.name, F.folder, RB.recommendedAction, RB.ratio, RB.weight FROM FILE F
+	LEFT JOIN FOLDER FO ON F.folderID = FO.ID
+	LEFT JOIN FOLDERNAME FN ON FN.name = FO.name
+	LEFT JOIN RATIOBASIS RB ON FN.ratiobasisID = RB.ID
+	ORDER BY ISNULL(RB.ratio) asc, RB.weight desc"
+4,2.17763390,"SELECT F.name, F.folder, F.filetype, FT.fileending as 'IDENTIFIED FILEENDING',  RB.recommendedAction, RB.ratio, RB.weight FROM FILE F
+	LEFT JOIN FILETYPE FT ON F.filetype = FT.fileending
+	LEFT JOIN RATIOBASIS RB ON FT.ratiobasisID = RB.ID
+	ORDER BY ISNULL(RB.ratio) asc, RB.weight desc"
+5,15.54553300,"SELECT F.name, F.folder, F.sizeInBytes, F.sizeAsString, S.sizeInBytes as 'treshhold sizeInBytes', S.sizeAsString as 'treshhold sizeAsString', RB.recommendedAction, RB.ratio, RB.weight
+ FROM FILE F
+	LEFT JOIN SIZE S ON F.sizeInBytes <= S.sizeInBytes
+	LEFT JOIN RATIOBASIS RB ON S.ratiobasisID = RB.ID
+"
+6,0.01236150,"DROP TABLE IF EXISTS fileDataWithMinDaysReference"
+7,26.07943340,"CREATE TABLE fileDataWithMinDaysReference AS 
+-- ; explain
+SELECT F.name, F.folder, F.lastAccessedTSD, DATEDIFF(NOW(), F.lastAccessedTSD) as differenceToToday, min(D.days) as minDays FROM FILE F
+		LEFT JOIN date D on D.lastAccess = 1 and DATEDIFF(NOW(), F.lastAccessedTSD) <= D.days
+		GROUP BY F.name"
+8,0.00017210,"SHOW WARNINGS"
+9,20.18908670,"SELECT filedata.folder, filedata.name, filedata.lastAccessedTSD, fileData.differenceToToday, D.days as 'treshhold days', RB.recommendedAction, RB.ratio, RB.weight from date D
+JOIN fileDataWithMinDaysReference fileData on D.days = fileData.minDays and D.lastAccess = 1
+LEFT JOIN ratiobasis rb on D.rat"
