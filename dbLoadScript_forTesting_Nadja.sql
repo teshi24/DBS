@@ -1,3 +1,7 @@
+call drop_index_if_exists('folder', 'ix_folder_name');
+call drop_index_if_exists('file', 'ix_file_name');
+call drop_index_if_exists('file', 'ix_file_filetype');
+
 LOAD DATA INFILE '../data/DBS_folder_analysis_driveD.csv' INTO TABLE folder
 FIELDS TERMINATED BY ','
 ENCLOSED BY '"'
@@ -47,3 +51,7 @@ SET lastModifiedTSD = STR_TO_DATE(@lastModifiedTSD, '%d.%m.%Y %H:%i:%s'),
 	lastAccessedTSD = STR_TO_DATE(@lastAccessedTSD, '%d.%m.%Y %H:%i:%s'),
     creationTSD = STR_TO_DATE(@creationTSD, '%d.%m.%Y %H:%i:%s')
 ;
+
+create index ix_folder_name on folder(name asc);
+create index ix_file_name on file(name asc);
+create index ix_file_filetype on file(filetype asc);
