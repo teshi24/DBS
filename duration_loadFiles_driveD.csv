@@ -1,0 +1,19 @@
+Status,Duration
+Starting,0.000138
+"Checking permissions",0.000010
+"Opening tables",0.000018
+"After opening tables",0.000007
+"System lock",0.000006
+"Table lock",0.000010
+Executing,0.000322
+"Reading file",2.306362
+"End bulk insert",0.000066
+"Query end",0.000009
+Commit,0.004398
+"Closing tables",0.000017
+"Unlocking tables",0.000007
+"Closing tables",0.000010
+"Starting cleanup",0.000009
+"Freeing items",0.000029
+"Updating status",0.000128
+"Reset for next command",0.000025

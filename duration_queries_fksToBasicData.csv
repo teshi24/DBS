@@ -1,0 +1,33 @@
+Query_ID,Duration,Query
+1,0.42240360,"SELECT F.id, F.path, FN.ratiobasisID FROM FOLDER F
+	JOIN FOLDERNAME FN ON FN.name = F.name"
+2,0.48082220,"SELECT F.id, F.name, F.folder, FN.ratiobasisID FROM FILE F
+	JOIN FILENAME FN ON F.name = FN.name"
+3,0.35334380,"SELECT F.id, F.name, F.folder, FN.ratiobasisID FROM FILE F
+	JOIN FOLDER FO ON F.folderID = FO.ID
+	JOIN FOLDERNAME FN ON FN.name = FO.name"
+4,0.77751090,"SELECT F.id, F.name, F.folder, F.filetype, FT.fileending as 'IDENTIFIED FILEENDING',  FT.ratiobasisID FROM FILE F
+	JOIN FILETYPE FT ON F.filetype = FT.fileending"
+5,0.01135610,"DROP TABLE IF EXISTS fileDataWithMinSizeReference"
+6,13.14481270,"CREATE TABLE fileDataWithMinSizeReference AS 
+-- explain
+SELECT F.id, F.name, F.folder, F.sizeInBytes, F.sizeAsString, S.sizeInBytes as minSizeInBytes
+ FROM FILE F
+	JOIN SIZE S ON F.sizeInBytes <= S.sizeInBytes
+    GROUP BY F.id
+    Having min(S.sizeInBytes) = S.sizeInBytes"
+7,5.36809050,"SELECT filedata.id, filedata.name, filedata.folder, filedata.sizeInBytes, filedata.sizeAsString, S.sizeInBytes as 'treshhold sizeInBytes', S.sizeAsString as 'treshhold sizeAsString', S.ratiobasisID
+	FROM size s
+	JOIN fileDataWithMinSizeReference filedata ON filedata.minSizeInBytes = S.sizeInBytes"
+8,0.01243490,"DROP TABLE IF EXISTS fileDataWithMinDaysReference"
+9,14.54682380,"CREATE TABLE fileDataWithMinDaysReference AS 
+-- ;
+-- explain
+SELECT F.id, F.name, F.folder, F.lastAccessedTSD, DATEDIFF(NOW(), F.lastAccessedTSD) as differenceToToday, min(D.days) as minDays FROM FILE F
+		JOIN date D on D.lastAccess = 1 and DATEDIFF(NOW(), F.lastAccessedTSD) <= D.days
+		GROUP BY F."
+10,4.16024510,"CREATE INDEX ix_filedata_minDays on  fileDataWithMinDaysReference(minDays)"
+11,18.15081050,"SELECT filedata.id, filedata.folder, filedata.name, filedata.lastAccessedTSD, fileData.differenceToToday, D.days as 'treshhold days', D.ratiobasisId
+	from date D
+	JOIN fileDataWithMinDaysReference fileData on D.days = fileData.minDays and D.lastAccess = 1
+	GROUP BY fileData.id, D.ratiobasisId, D.day"

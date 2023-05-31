@@ -285,7 +285,7 @@ CREATE TABLE `file` (
   `filetype` VARCHAR(45) NOT NULL,
   PRIMARY KEY (`ID`),
   UNIQUE INDEX `idfile_UNIQUE` (`ID` ASC),
-  CONSTRAINT `fk_file_folder1`
+  CONSTRAINT `fk_file_folder`
     FOREIGN KEY (`folderID`)
     REFERENCES `folder` (`ID`)
     ON DELETE NO ACTION

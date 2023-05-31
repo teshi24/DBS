@@ -19,6 +19,8 @@ SELECT F.path, RB.recommendedAction, RB.ratio, RB.weight FROM FOLDER F
 -- 124270 row(s) returned
 -- run 1 0.860 sec / 0.203 sec
 -- run 2 0.828 sec / 0.203 sec
+-- 
+-- removed left join
 
 -- Ziel: finde ratios für 1 file
 -- FILENAME

@@ -1,4 +1,6 @@
-LOAD DATA INFILE '../data/DBS_folder_analysis.csv' INTO TABLE folder
+-- LOAD DATA INFILE '../data/DBS_folder_analysis_driveD.csv' INTO TABLE folder
+-- LOAD DATA INFILE '../data/DBS_folder_analysis_driveC.csv' INTO TABLE folder
+LOAD DATA INFILE '../data/DBS_folder_analysis_drive.csv' INTO TABLE folder
 FIELDS TERMINATED BY ','
 ENCLOSED BY '"'
 LINES TERMINATED BY '\r\n'
@@ -10,6 +12,7 @@ SET lastModifiedTSD = STR_TO_DATE(@lastModifiedTSD, '%d.%m.%Y %H:%i:%s'),
 
 SELECT * FROM fsc.folder;
 SELECT count(*) FROM fsc.folder;
+
 -- file driveD - empty table
 -- 17:52:04	LOAD DATA INFILE '../data/DBS_folder_analysis_driveD.csv' INTO TABLE folder FIELDS TERMINATED BY ',' ENCLOSED BY '"' LINES TERMINATED BY '\r\n' IGNORE 1 LINES (@lastModifiedTSD, path, name, @parentFolderID, ID) SET lastModifiedTSD = STR_TO_DATE(@lastModifiedTSD, '%d.%m.%Y %H:%i:%s'),  parentFolderID = nullIf(@parentFolderID, '')	7708 row(s) affected, 21 warning(s): 1264 Out of range value for column 'lastModifiedTSD' at row 1 1265 Data truncated for column 'name' at row 333 1265 Data truncated for column 'name' at row 334 1265 Data truncated for column 'name' at row 342 1265 Data truncated for column 'name' at row 647 1265 Data truncated for column 'name' at row 657 1265 Data truncated for column 'name' at row 1095 1265 Data truncated for column 'name' at row 1096 1265 Data truncated for column 'name' at row 1097 1265 Data truncated for column 'name' at row 1098 1265 Data truncated for column 'name' at row 1099 1265 Data truncated for column 'name' at row 1100 1265 Data truncated for column 'name' at row 1308 1265 Data truncated for column 'name' at row 1310 1265 Data truncated for column 'name' at row 1312 1265 Data truncated for column 'name' at row 1318 1265 Data truncated for column 'name' at row 1319 1265 Data truncated for column 'name' at row 1416 1265 Data truncated for column 'name' at row 1423 1265 Data truncated for column 'name' at row 1505 1265 Data truncated for column 'name' at row 1569
 --          Records: 7708  Deleted: 0  Skipped: 0  Warnings: 21	0.250 sec
@@ -44,7 +47,9 @@ SELECT count(*) FROM fsc.folder;
 -- 20:44:41	SELECT count(*) FROM fsc.folder	1 row(s) returned	0.031 sec / 0.000 sec
 
 
-LOAD DATA INFILE '../data/DBS_file_analysis.csv' INTO TABLE file
+-- LOAD DATA INFILE '../data/DBS_file_analysis_driveD.csv' INTO TABLE file
+-- LOAD DATA INFILE '../data/DBS_file_analysis_driveC.csv' INTO TABLE file
+LOAD DATA INFILE '../data/DBS_file_analysis_drive.csv' INTO TABLE file
 FIELDS TERMINATED BY ','
 ENCLOSED BY '"'
 LINES TERMINATED BY '\r\n'
@@ -94,3 +99,6 @@ SELECT count(*) FROM fsc.file;
 --          Records: 347269  Deleted: 0  Skipped: 0  Warnings: 10	7.704 sec
 -- 20:44:49	SELECT * FROM fsc.file	483802 row(s) returned	0.000 sec / 8.265 sec
 -- 20:45:01	SELECT count(*) FROM fsc.file	1 row(s) returned	0.140 sec / 0.000 sec
+
+
+-- ! no significant difference without indizes!

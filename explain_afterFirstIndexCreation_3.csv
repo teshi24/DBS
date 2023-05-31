@@ -1,0 +1,4 @@
+id,select_type,table,type,possible_keys,key,key_len,ref,rows,Extra
+1,SIMPLE,FN,ALL,name_UNIQUE,NULL,NULL,NULL,29,
+1,SIMPLE,FO,ref,"PRIMARY,idfolder_UNIQUE,ix_folder_name",ix_folder_name,767,fsc.FN.name,1,"Using index"
+1,SIMPLE,F,ref,fk_file_folder,fk_file_folder,4,fsc.FO.ID,2,
