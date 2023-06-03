@@ -1,6 +1,7 @@
 call drop_index_if_exists('folder', 'ix_folder_name');
 call drop_index_if_exists('file', 'ix_file_name');
 call drop_index_if_exists('file', 'ix_file_filetype');
+call drop_index_if_exists('file', 'ix_file_sizeInBytes');
 
 LOAD DATA INFILE '../data/DBS_folder_analysis_drive.csv' INTO TABLE folder
 FIELDS TERMINATED BY ','
@@ -36,3 +37,4 @@ SELECT count(*) FROM fsc.file;
 create index ix_folder_name on folder(name asc);
 create index ix_file_name on file(name asc);
 create index ix_file_filetype on file(filetype asc);
+create index ix_file_sizeInBytes on file(sizeInBytes asc);

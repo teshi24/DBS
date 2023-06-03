@@ -1,0 +1,4 @@
+id,select_type,table,type,possible_keys,key,key_len,ref,rows,Extra
+1,SIMPLE,FN,ALL,"name_UNIQUE,fk_filename_ratiobasis1",NULL,NULL,NULL,2,
+1,SIMPLE,RB,eq_ref,PRIMARY,PRIMARY,4,fsc.FN.ratiobasisID,1,
+1,SIMPLE,F,ref,ix_file_name,ix_file_name,767,fsc.FN.name,1,

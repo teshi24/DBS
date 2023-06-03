@@ -307,10 +307,11 @@ END $$
 DELIMITER ;
 
 create index ix_filetype_fileending on filetype(fileending asc);
--- todo: maybe add this when queries are corrected -- create index ix_size_sizeInBytes on size(sizeInBytes asc);
+create unique index ix_size_sizeInBytes on size(sizeInBytes asc);
 create index ix_date_lastAccessNDays on date(lastAccess asc, days asc);
 -- todo: maybe add this when queries are corrected -- create index ix_date_lastAccess on date(lastAccess asc);
 -- todo: maybe add this when queries are corrected -- create index ix_date_days on date(days asc);
+
 
 COMMIT;
 

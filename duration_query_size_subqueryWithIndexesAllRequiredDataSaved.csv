@@ -1,0 +1,7 @@
+Query_ID,Duration,Query
+1,8.71835780,"CREATE TABLE fileDataWithMinSizeReference AS
+-- EXPLAIN
+SELECT F.id, F.name, F.folder, F.sizeInBytes, F.sizeAsString,
+       S.sizeInBytes as minSizeInBytes, S.id as "sizeId", S.sizeInBytes as 'treshhold sizeInBytes', S.sizeAsString as 'treshhold sizeAsString', S.ratiobasisID,
+       RB.recommendedA"
+2,1.22694730,"SELECT * FROM fileDataWithMinSizeReference"

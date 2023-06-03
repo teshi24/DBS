@@ -1,0 +1,26 @@
+Query_ID,Duration,Query
+1,0.03898870,"CREATE TABLE FOLDER_FOLDERNAME_ANALYSIS (primary key (ID)) AS
+-- call drop_index_if_exists('foldername', 'ix_foldername_name');
+-- call drop_index_if_exists('filename', 'ix_filename_name');
+
+-- */ EXPLAIN
+SELECT F.id, F.path, FN.ratiobasisID, RB.recommendedAction, RB.ratio, RB.weight FROM FOLDER F
+	"
+2,0.00053000,"SELECT * FROM FOLDER_FOLDERNAME_ANALYSIS"
+3,0.01403880,"CREATE TABLE FILE_FILENAME_ANALYSIS (primary key (ID)) AS
+-- */ EXPLAIN
+SELECT F.id, F.name, F.folder, F.folderId, FN.ratiobasisID, RB.recommendedAction, RB.ratio, RB.weight FROM FILE F
+	JOIN FILENAME FN ON F.name = FN.name
+    JOIN RATIOBASIS RB ON FN.ratiobasisID = RB.ID"
+4,0.00041320,"SELECT * FROM FILE_FILENAME_ANALYSIS"
+5,0.11511310,"CREATE TABLE FILE_FOLDERNAME_ANALYSIS (primary key (ID)) AS
+-- */ EXPLAIN
+SELECT F.id, F.name, F.folder, F.folderId, FN.ratiobasisID, FN.recommendedAction, FN.ratio, FN.weight FROM FILE F
+	JOIN FOLDER_FOLDERNAME_ANALYSIS FN ON F.folderID = FN.ID"
+6,0.00815720,"SELECT * FROM FILE_FOLDERNAME_ANALYSIS"
+7,1.05009220,"CREATE TABLE FILE_FILETYPE_ANALYSIS (primary key (ID)) AS
+-- */ EXPLAIN
+SELECT F.id, F.name, F.folder, F.filetype, FT.fileending as 'IDENTIFIED FILEENDING',  FT.ratiobasisID, RB.recommendedAction, RB.ratio, RB.weight FROM FILE F
+	JOIN FILETYPE FT ON F.filetype = FT.fileending
+    JOIN RATIOBASIS RB "
+8,0.19373120,"SELECT * FROM FILE_FILETYPE_ANALYSIS"

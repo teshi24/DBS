@@ -1,0 +1,4 @@
+id,select_type,table,type,possible_keys,key,key_len,ref,rows,Extra
+1,PRIMARY,S,ALL,NULL,NULL,NULL,NULL,6,
+1,PRIMARY,F,ALL,NULL,NULL,NULL,NULL,468018,"Using where; Using join buffer (flat, BNL join)"
+2,"DEPENDENT SUBQUERY",innerS,ALL,NULL,NULL,NULL,NULL,6,"Using where"
