@@ -1,0 +1,11 @@
+Query_ID,Duration,Query
+1,4.40518610,"CREATE TABLE fileDataWithMinDaysReference AS 
+-- explain
+SELECT F.id, F.name, F.folder, F.lastAccessedTSD, DATEDIFF(NOW(), F.lastAccessedTSD) as differenceToToday, d.days as minDays
+ FROM FILE F
+    JOIN foldertypes ft on ft.id = f.id 
+	JOIN date d ON d.lastAccess = 1 and d.type = ft.type and d.days"
+2,0.04367260,"SELECT filedata.id, filedata.folder, filedata.name, filedata.lastAccessedTSD, fileData.differenceToToday, D.days as 'treshhold days', D.ratiobasisId
+	from date D
+	JOIN fileDataWithMinDaysReference fileData on D.days = fileData.minDays and D.lastAccess = 1
+	GROUP BY fileData.id, D.ratiobasisId, D.day"

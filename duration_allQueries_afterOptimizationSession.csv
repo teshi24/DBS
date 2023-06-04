@@ -1,0 +1,38 @@
+Query_ID,Duration,Query
+1,0.08419020,"CREATE TABLE FOLDER_FOLDERNAME_ANALYSIS (primary key (ID)) AS
+-- / EXPLAIN
+SELECT F.id, F.path, FN.ratiobasisID, RB.recommendedAction, RB.ratio, RB.weight FROM FOLDER F
+	JOIN FOLDERNAME FN ON FN.name = F.name
+    JOIN RATIOBASIS RB ON FN.ratiobasisID = RB.ID"
+2,0.00046190,"SELECT * FROM FOLDER_FOLDERNAME_ANALYSIS"
+3,0.02796340,"CREATE TABLE FILE_FILENAME_ANALYSIS (primary key (ID)) AS
+-- / EXPLAIN
+SELECT F.id, F.name, F.folder, F.folderId, FN.ratiobasisID, RB.recommendedAction, RB.ratio, RB.weight FROM FILE F
+	JOIN FILENAME FN ON F.name = FN.name
+    JOIN RATIOBASIS RB ON FN.ratiobasisID = RB.ID"
+4,0.00038410,"SELECT * FROM FILE_FILENAME_ANALYSIS"
+5,0.19755080,"CREATE TABLE FILE_FOLDERNAME_ANALYSIS (primary key (ID)) AS
+-- / EXPLAIN
+SELECT F.id, F.name, F.folder, F.folderId, FN.ratiobasisID, FN.recommendedAction, FN.ratio, FN.weight FROM FILE F
+	JOIN FOLDER_FOLDERNAME_ANALYSIS FN ON F.folderID = FN.ID"
+6,0.01422730,"SELECT * FROM FILE_FOLDERNAME_ANALYSIS"
+7,1.19825320,"CREATE TABLE FILE_FILETYPE_ANALYSIS (primary key (ID)) AS
+-- / EXPLAIN
+SELECT F.id, F.name, F.folder, F.filetype, FT.fileending as 'IDENTIFIED FILEENDING',  FT.ratiobasisID, RB.recommendedAction, RB.ratio, RB.weight FROM FILE F
+	JOIN FILETYPE FT ON F.filetype = FT.fileending
+    JOIN RATIOBASIS RB O"
+8,0.27002550,"SELECT * FROM FILE_FILETYPE_ANALYSIS"
+9,7.67452510,"CREATE TABLE fileDataWithMinSizeReference AS
+-- EXPLAIN
+SELECT F.id, F.name, F.folder, F.sizeInBytes, F.sizeAsString,
+       S.sizeInBytes as minSizeInBytes, S.id as "sizeId", S.sizeInBytes as 'treshhold sizeInBytes', S.sizeAsString as 'treshhold sizeAsString', S.ratiobasisID,
+       RB.recommendedA"
+10,6.56892900,"SELECT * FROM fileDataWithMinSizeReference"
+11,4.33139250,"CREATE TABLE fileDataWithMinDaysReference AS 
+-- explain
+SELECT F.id, F.name, F.folder, F.lastAccessedTSD, DATEDIFF(NOW(), F.lastAccessedTSD) as differenceToToday, d.days as 'tresholdDays', D.ratiobasisId
+ FROM FILE F
+    JOIN foldertypes ft on ft.id = f.id 
+	JOIN date d ON d.lastAccess = 1 and d.ty"
+12,0.01360600,"SELECT filedata.id, filedata.folder, filedata.name, filedata.lastAccessedTSD, fileData.differenceToToday, fileData.tresholdDays, fileData.ratiobasisId
+	from fileDataWithMinDaysReference fileData"
