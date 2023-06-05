@@ -1,0 +1,64 @@
+Query_ID,Duration,Query
+5,0.00585290,"CREATE PROCEDURE calculateConsolidatedRatios()
+BEGIN
+  SET SQL_SAFE_UPDATES=0;
+  UPDATE file_consolidatedRatios m
+  SET
+    m.B_ratio = IF(m.fna_recommendedAction = 'B', m.fna_weighted_average, 0) + IF(m.ffna_recommendedAction = 'B', m.ffna_weighted_average, 0) +IF(m.fta_recommendedAction = 'B', m.f"
+6,0.00004380,"SET  SQL_SAFE_UPDATES=0"
+7,17.39311770,"UPDATE file_consolidatedRatios m
+  SET
+    m.B_ratio = IF(m.fna_recommendedAction = 'B', m.fna_weighted_average, 0) + IF(m.ffna_recommendedAction = 'B', m.ffna_weighted_average, 0) +IF(m.fta_recommendedAction = 'B', m.fta_weighted_average, 0) +IF(m.fsa_recommendedAction = 'B', m.fsa_weighted_average"
+8,5.84397730,"UPDATE file_consolidatedRatios m
+  SET
+    m.recommendation = CASE
+							WHEN m.N_ratio >= D_ratio and m.N_ratio >= B_ratio then 'N'
+							WHEN m.D_ratio > B_ratio then 'D'
+							WHEN m.B_ratio > D_ratio then 'B'
+							WHEN m.D_ratio = B_ratio then 'B/D'
+							else null
+						END,
+	m.recommenda"
+9,0.00003790,"SET  SQL_SAFE_UPDATES=1"
+10,3.70291350,"select * from file_consolidatedRatios"
+11,1.44745360,"select f.id, f.folder, f.name, f.lastAccessedTSD, f.sizeAsString, f.sizeInBytes, f.filetype
+, f.recommendation, f.recommendationRatio from file_consolidatedRatios f"
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+12,7.36128090,"create table folderPreAnalysis (primary key (folderId, recommendation)) as
+-- explain
+ select f.folderId, f.folder, f.recommendation, avg(f.recommendationRatio) as recommendationRatio, count(*) as recommendationTypeCount
+ from file_consolidatedRatios f
+ group by f.folderid, f.recommendation"
+ 
+ 
+ 
+14,0.28923340,"create table folderPreAnalysis_duplicatedFolders (primary key (folderId)) as
+  select folderId, count(*) from folderPreAnalysis F
+  group by folderId
+  having count(*) > 1"
+15,1.83825990,"create table FOLDER_ANALYSIS (primary key (folderID)) as 
+	SELECT f.*, sum(fileCr.sizeInBytes) as sizeInBytes, count(*) as countOfFiles, max(fileCr.lastAccessedTSD) as lastAccessedTSD FROM folderPreAnalysis F
+       join folderPreAnalysis_duplicatedFolders df on F.folderId = df.folderId
+       join "
+17,5.33458810,"INSERT ignore INTO folder_analysis (`folderId`, `folder`, `recommendation`, `recommendationRatio`, `recommendationTypeCount`, `sizeInBytes`, `countOfFiles`, `lastAccessedTSD`)
+	SELECT f.*, sum(fileCr.sizeInBytes) as sizeInBytes, count(*) as countOfFiles, max(fileCr.lastAccessedTSD) as lastAccessedTS"
+19,0.64848910,"select * from folder_analysis f
+ order by f.recommendationRatio, f.sizeInBytes"

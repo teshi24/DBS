@@ -34,6 +34,14 @@ SET lastModifiedTSD = STR_TO_DATE(@lastModifiedTSD, '%d.%m.%Y %H:%i:%s'),
 SELECT * FROM fsc.file;
 SELECT count(*) FROM fsc.file;
 
+-- todo: used to remove issue of wrong script results
+SET SQL_SAFE_UPDATES=0;
+UPDATE file f 
+join folder fo on f.folderId = fo.id
+set f.folder = fo.path
+where f.folder = '' and f.folderId is not null;
+SET SQL_SAFE_UPDATES=1;
+
 create index ix_folder_name on folder(name asc);
 create index ix_file_name on file(name asc);
 create index ix_file_filetype on file(filetype asc);

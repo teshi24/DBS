@@ -1,0 +1,46 @@
+Query_ID,Duration,Query
+1,5.27029750,"create table folder_foldername_preAnalysis (primary key (folderID, ratiobasisID)) as
+-- / EXPLAIN
+select F.id as 'folderID', F.path, FN.id as 'foldernameID', FN.ratiobasisID, RB.recommendedAction, RB.ratio, RB.weight FROM FOLDER F
+JOIN FOLDERNAME FN ON fn.id in (
+		select innerFN.id from FOLDERNAME "
+2,0.04547710,"select * from folder_foldername_preAnalysis"
+3,1.09153170,"CREATE TABLE FOLDER_FOLDERNAME_ANALYSIS (primary key (folderID)) AS
+-- / EXPLAIN
+SELECT * FROM folder_foldername_preAnalysis F
+    where f.weight = (
+      select MAX(innerF.weight)
+      from folder_foldername_preAnalysis innerF
+      where innerF.folderID = F.folderID
+    ) and f.ratio = (
+      s"
+4,0.01571710,"CREATE TABLE FILE_FILENAME_ANALYSIS (primary key (ID)) AS
+-- / EXPLAIN
+SELECT F.id, F.name, F.folder, F.folderId, FN.ratiobasisID, RB.recommendedAction, RB.ratio, RB.weight FROM FILE F
+	JOIN FILENAME FN ON F.name = FN.name
+    JOIN RATIOBASIS RB ON FN.ratiobasisID = RB.ID"
+5,0.00038940,"SELECT * FROM FILE_FILENAME_ANALYSIS"
+6,1.79968010,"CREATE TABLE FILE_FOLDERNAME_ANALYSIS (primary key (ID)) AS
+-- / EXPLAIN
+SELECT F.id, F.name, F.folder, F.folderId, FN.ratiobasisID, FN.recommendedAction, FN.ratio, FN.weight FROM FILE F
+	JOIN FOLDER_FOLDERNAME_ANALYSIS FN ON F.folderID = FN.folderID"
+7,1.34783460,"SELECT * FROM FILE_FOLDERNAME_ANALYSIS"
+8,1.16824540,"CREATE TABLE FILE_FILETYPE_ANALYSIS (primary key (ID)) AS
+-- / EXPLAIN
+SELECT F.id, F.name, F.folder, F.filetype, FT.fileending as 'IDENTIFIED FILEENDING',  FT.ratiobasisID, RB.recommendedAction, RB.ratio, RB.weight FROM FILE F
+	JOIN FILETYPE FT ON F.filetype = FT.fileending
+    JOIN RATIOBASIS RB O"
+9,0.16547360,"SELECT * FROM FILE_FILETYPE_ANALYSIS"
+10,7.79816540,"CREATE TABLE file_size_analysis AS
+-- EXPLAIN
+SELECT F.id, F.name, F.folder, F.sizeInBytes, F.sizeAsString,
+       S.sizeInBytes as minSizeInBytes, S.id as "sizeId", S.sizeInBytes as 'treshhold sizeInBytes', S.sizeAsString as 'treshhold sizeAsString', S.ratiobasisID,
+       RB.recommendedAction, RB."
+11,6.78284460,"SELECT * FROM file_size_analysis"
+12,3.66133730,"CREATE TABLE file_lastAccessed_analysis AS 
+-- explain
+SELECT F.id, F.name, F.folder, F.lastAccessedTSD, DATEDIFF(NOW(), F.lastAccessedTSD) as differenceToToday, d.days as 'tresholdDays', D.ratiobasisId
+ FROM FILE F
+    JOIN foldertypes ft on ft.id = f.id 
+	JOIN date d ON d.lastAccess = 1 and d.type"
+13,0.11254470,"select * from file_lastAccessed_analysis"

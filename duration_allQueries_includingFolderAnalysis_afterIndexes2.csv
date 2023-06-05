@@ -1,0 +1,69 @@
+Query_ID,Duration,Query
+5,6.87992020,"create index ix_fileConsolidatedRatios_nratio on file_consolidatedratios (N_ratio asc)"
+6,1.41646350,"create index ix_fileConsolidatedRatios_bratio on file_consolidatedratios (B_ratio asc)"
+7,2.99041740,"UPDATE file_consolidatedRatios m
+  SET
+    m.recommendation = CASE
+							WHEN m.N_ratio >= D_ratio and m.N_ratio >= B_ratio then 'N'
+							WHEN m.D_ratio > B_ratio then 'D'
+							WHEN m.B_ratio > D_ratio then 'B'
+							WHEN m.D_ratio = B_ratio then 'B/D'
+							else null
+						END,
+	m.recommenda"
+8,1.65807170,"create index ix_fileConsolidatedRatios_recommendation on file_consolidatedratios (recommendation)"
+9,1.43468140,"create index ix_fileConsolidatedRatios_folderId on file_consolidatedRatios (folderId)"
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+10,7.08221420,"create table folderPreAnalysis (primary key (folderId, recommendation)) as
+-- explain
+ select f.folderId, f.folder, f.recommendation, avg(f.recommendationRatio) as recommendationRatio, count(*) as recommendationTypeCount
+ from file_consolidatedRatios f
+ group by f.folderid, f.recommendation"
+12,0.18393270,"create index ix_folderPreAnalysis_recommendationRatio on folderPreAnalysis (recommendationRatio)"
+13,0.28261430,"create index ix_folderPreAnalysis_recommendation on folderPreAnalysis (recommendation)"
+
+14,0.14643440,"create table folderPreAnalysis_duplicatedFolders (primary key (folderId)) as
+-- explain
+  select folderId, count(*) from folderPreAnalysis F
+  group by folderId
+  having count(*) > 1"
+15,0.76547640,"create table FOLDER_ANALYSIS (primary key (folderID)) as 
+-- explain
+	SELECT f.*, sum(fileCr.sizeInBytes) as sizeInBytes, count(*) as countOfFiles, max(fileCr.lastAccessedTSD) as lastAccessedTSD FROM folderPreAnalysis F
+       join folderPreAnalysis_duplicatedFolders df on F.folderId = df.folderId
+ "
+16,4.05584810,"INSERT ignore INTO folder_analysis (`folderId`, `folder`, `recommendation`, `recommendationRatio`, `recommendationTypeCount`, `sizeInBytes`, `countOfFiles`, `lastAccessedTSD`)
+	-- explain
+    SELECT f.*, sum(fileCr.sizeInBytes) as sizeInBytes, count(*) as countOfFiles, max(fileCr.lastAccessedTSD) as"
+17,0.00008420,"SHOW WARNINGS"
+18,0.33391850,"create index ix_folderAnalysis_recommendationRatioNSizeInBytes on folder_analysis (recommendationRatio desc, sizeInBytes desc)"
+19,0.63169010,"select * from folder_analysis f
+ order by f.recommendationRatio desc, f.sizeInBytes desc"

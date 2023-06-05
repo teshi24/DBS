@@ -1,0 +1,68 @@
+Query_ID,Duration,Query
+44,2.99874450,"UPDATE file_consolidatedRatios m
+  SET
+    m.recommendation = CASE
+							WHEN m.N_ratio >= D_ratio and m.N_ratio >= B_ratio then 'N'
+							WHEN m.D_ratio > B_ratio then 'D'
+							WHEN m.B_ratio > D_ratio then 'B'
+							WHEN m.D_ratio = B_ratio then 'B/D'
+							else null
+						END,
+	m.recommenda"
+45,0.00004260,"SET  SQL_SAFE_UPDATES=1"
+46,3.99004390,"create index ix_fileConsolidatedRatios_recommendation on file_consolidatedratios (recommendation)"
+47,1.42089020,"create index ix_fileConsolidatedRatios_folderId on file_consolidatedRatios (folderId)"
+48,2.12392800,"select * from file_consolidatedRatios"
+49,1.58247240,"select f.id, f.folder, f.name, f.lastAccessedTSD, f.sizeAsString, f.sizeInBytes, f.filetype
+, f.recommendation, f.recommendationRatio from file_consolidatedRatios f"
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+50,7.12785650,"create table folderPreAnalysis (primary key (folderId, recommendation)) as
+-- explain
+ select f.folderId, f.folder, f.recommendation, avg(f.recommendationRatio) as recommendationRatio, count(*) as recommendationTypeCount
+ from file_consolidatedRatios f
+ group by f.folderid, f.recommendation"
+ 
+ 
+ 
+52,0.20144670,"create table folderPreAnalysis_duplicatedFolders (primary key (folderId)) as
+-- explain
+  select folderId, count(*) from folderPreAnalysis F
+  group by folderId
+  having count(*) > 1"
+53,0.93007330,"create table FOLDER_ANALYSIS (primary key (folderID)) as 
+-- explain
+	SELECT f.*, sum(fileCr.sizeInBytes) as sizeInBytes, count(*) as countOfFiles, max(fileCr.lastAccessedTSD) as lastAccessedTSD FROM folderPreAnalysis F
+       join folderPreAnalysis_duplicatedFolders df on F.folderId = df.folderId
+ "
+55,3.92401310,"INSERT ignore INTO folder_analysis (`folderId`, `folder`, `recommendation`, `recommendationRatio`, `recommendationTypeCount`, `sizeInBytes`, `countOfFiles`, `lastAccessedTSD`)
+	-- explain
+    SELECT f.*, sum(fileCr.sizeInBytes) as sizeInBytes, count(*) as countOfFiles, max(fileCr.lastAccessedTSD) as"
+57,0.35491540,"create index ix_folderAnalysis_recommendationRatioNSizeInBytes on folder_analysis (recommendationRatio desc, sizeInBytes desc)"
+58,0.62672720,"select * from folder_analysis f
+ order by f.recommendationRatio desc, f.sizeInBytes desc"

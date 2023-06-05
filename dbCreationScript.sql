@@ -141,7 +141,6 @@ ENGINE = InnoDB;
 --
 -- Daten für Tabelle `foldername`
 --
-
 INSERT INTO `foldername` (`ID`, `name`, `ratiobasisID`) VALUES
 (1, 'System32', 13),
 (2, 'WinSxS', 13),
@@ -150,10 +149,10 @@ INSERT INTO `foldername` (`ID`, `name`, `ratiobasisID`) VALUES
 (5, 'C:\\Windows\\Downloaded Program Files', 1),
 (6, 'C:\\Windows\\LiveKernelReports', 1),
 (7, 'C:\\Program Files\\rempl', 1),
-(8, 'C:\\Users\\%userprofiles%\\Downloads', 1),
-(9, 'C:\\Users\\%userprofiles%\\AppData\\Local\\Google\\Chrome\\User Data\\Default\\Cache', 1),
-(10, 'C:\\Users\\%userprofiles%\\AppData\\Local\\Mozilla\\Firefox', 1),
-(11, 'C:\\Users\\%userprofiles%\\AppData\\Local\\Microsoft\\Internet Explorer\\CacheStorage', 1),
+(8, 'C:\\Users\\%\\Downloads', 1),
+(9, 'C:\\Users\\%\\AppData\\Local\\Google\\Chrome\\User Data\\Default\\Cache', 1),
+(10, 'C:\\Users\\%\\AppData\\Local\\Mozilla\\Firefox', 1),
+(11, 'C:\\Users\\%\\AppData\\Local\\Microsoft\\Internet Explorer\\CacheStorage', 1),
 (12, 'C:\\Windows\\Logs\\CBS', 1),
 (13, 'C:\\Windows\\SoftwareDistribution\\Download', 1),
 (14, 'C:\\Users\\%userprofiles%\\AppData\\Local\\Temp', 1),
@@ -162,16 +161,15 @@ INSERT INTO `foldername` (`ID`, `name`, `ratiobasisID`) VALUES
 (17, 'C:\\ProgramData\\Microsoft\\Windows\\WER\\ReportArchive', 1),
 (18, 'C:\\Users\\%userprofiles%\\Documents', 11),
 (19, 'Temp', 2),
-(20, 'Downloads', 3),
-(21, 'Download', 3),
-(22, 'Cache', 2),
-(23, 'LiveKernelReports', 1),
-(24, 'rempl', 1),
-(25, 'logs', 3),
-(26, 'crashdumps', 1),
-(27, 'reportarchive', 1),
-(28, 'Bilder', 13),
-(29, 'Documents', 13);
+(20, 'Download', 3),
+(21, 'Cache', 2),
+(22, 'LiveKernelReports', 1),
+(23, 'rempl', 1),
+(24, 'logs', 3),
+(25, 'crashdumps', 1),
+(26, 'reportarchive', 1),
+(27, 'Bilder', 11),
+(28, 'Documents', 11);
 
 -- --------------------------------------------------------
 

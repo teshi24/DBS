@@ -1,0 +1,38 @@
+Query_ID,Duration,Query
+1,14.32066370,"create table file_consolidatedRatios (primary key (id)) as
+-- explain
+SELECT f.id, f.folder, f.name, f.lastAccessedTSD, f.sizeAsString, f.sizeInBytes, f.filetype,
+		fna.ratiobasisID as 'fna_rbId', fna.ratio as 'fna_ratio', fna.weight as 'fna_weight',
+        ffna.ratiobasisID as 'ffna_rbId', ffna.ra"
+2,0.00007410,"SHOW WARNINGS"
+3,7.57541130,"select * from file_consolidatedRatios"
+4,0.01182380,"alter table file_consolidatedRatios
+add B_ratio int,
+add D_ratio int,
+add N_ratio int,
+add no_ratio_count int,
+add recommendation varchar(10)"
+5,0.00501620,"DROP PROCEDURE IF EXISTS calculateConsolidatedRatios"
+6,0.00571800,"CREATE PROCEDURE calculateConsolidatedRatios()
+BEGIN
+  -- Calculate the sums and counts based on actions
+  SET SQL_SAFE_UPDATES=0;
+  UPDATE file_consolidatedRatios m
+  SET
+    m.B_ratio = IF(m.fna_recommendedAction = 'B', m.fna_weighted_average, 0) + IF(m.ffna_recommendedAction = 'B', m.ffna_weighte"
+7,0.00005070,"SET  SQL_SAFE_UPDATES=0"
+8,17.66977620,"UPDATE file_consolidatedRatios m
+  SET
+    m.B_ratio = IF(m.fna_recommendedAction = 'B', m.fna_weighted_average, 0) + IF(m.ffna_recommendedAction = 'B', m.ffna_weighted_average, 0) +IF(m.fta_recommendedAction = 'B', m.fta_weighted_average, 0) +IF(m.fsa_recommendedAction = 'B', m.fsa_weighted_average"
+9,5.03629550,"UPDATE file_consolidatedRatios m
+  SET
+    m.recommendation = CASE
+							WHEN m.N_ratio >= D_ratio and m.N_ratio >= B_ratio then 'N'
+							WHEN m.D_ratio > B_ratio then 'D'
+							WHEN m.B_ratio > D_ratio then 'B'
+							WHEN m.D_ratio = B_ratio then 'B/D'
+							else null
+						END
+  "
+10,0.00004200,"SET  SQL_SAFE_UPDATES=1"
+11,2.66075670,"select * from file_consolidatedRatios"

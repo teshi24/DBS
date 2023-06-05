@@ -1,0 +1,44 @@
+Query_ID,Duration,Query
+1,13.36346630,"create table file_consolidatedAnalysis (primary key (id)) as
+-- explain
+select f.id, f.folder, f.name, f.lastAccessedTSD, f.sizeAsString, f.sizeInBytes, f.filetype,
+		fna.ratiobasisID as 'fna_rbId', fna.ratio as 'fna_ratio', fna.weight as 'fna_weight', fna.recommendedAction as 'fna_action',
+        "
+2,0.00008600,"SHOW WARNINGS"
+3,11.53124550,"select * from file_consolidatedAnalysis"
+4,6.64300690,"create table file_consolidatedRatios (primary key (id)) as
+-- explain
+SELECT f.*, f.fna_action as fna_recommendedAction, fna_ratio * fna_weight / 100 as fna_weighted_average --  / 100 % / 1 = summe typeWeight
+		, f.ffna_action as ffna_recommendedAction, ffna_ratio * ffna_weight / 100 as ffna_weighte"
+5,0.00007770,"SHOW WARNINGS"
+6,10.81393070,"select * from file_consolidatedRatios"
+7,0.01076960,"alter table file_consolidatedRatios
+add B_ratio int,
+add D_ratio int,
+add N_ratio int,
+add no_ratio_count int,
+add recommendation varchar(10)"
+8,0.00490320,"DROP PROCEDURE IF EXISTS calculateConsolidatedRatios"
+9,0.00583460,"CREATE PROCEDURE calculateConsolidatedRatios()
+BEGIN
+  -- Calculate the sums and counts based on actions
+  SET SQL_SAFE_UPDATES=0;
+  UPDATE file_consolidatedRatios m
+  SET
+    m.B_ratio = IF(m.fna_recommendedAction = 'B', m.fna_weighted_average, 0) + IF(m.ffna_recommendedAction = 'B', m.ffna_weighte"
+10,0.00004020,"SET  SQL_SAFE_UPDATES=0"
+11,20.42735780,"UPDATE file_consolidatedRatios m
+  SET
+    m.B_ratio = IF(m.fna_recommendedAction = 'B', m.fna_weighted_average, 0) + IF(m.ffna_recommendedAction = 'B', m.ffna_weighted_average, 0) +IF(m.fta_recommendedAction = 'B', m.fta_weighted_average, 0) +IF(m.fsa_recommendedAction = 'B', m.fsa_weighted_average"
+12,25.11355840,"UPDATE file_consolidatedRatios m
+  SET
+    m.recommendation = CASE
+							WHEN m.N_ratio >= D_ratio and m.N_ratio >= B_ratio then 'N'
+							WHEN m.D_ratio > B_ratio then 'D'
+							WHEN m.B_ratio > D_ratio then 'B'
+							WHEN m.D_ratio = B_ratio then 'B/D'
+							else null
+						END
+  "
+13,0.00004660,"SET  SQL_SAFE_UPDATES=1"
+14,19.37255770,"select * from file_consolidatedRatios"
