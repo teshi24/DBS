@@ -1,0 +1,42 @@
+Query_ID,Duration,Query
+30,0.04253600,"CREATE INDEX ix_filetype_fileending ON filetype(fileending ASC)"
+31,0.01214260,"CREATE UNIQUE INDEX ix_size_sizeInBytes ON size(sizeInBytes ASC)"
+32,0.01255700,"CREATE INDEX ix_date_lastAccessNDays ON date(lastAccess ASC, days ASC)"
+33,0.00006180,COMMIT
+34,0.19517190,"LOAD DATA INFILE '../data/DBS_folder_analysis_driveD_neu.csv' INTO TABLE folder
+FIELDS TERMINATED BY ','
+ENCLOSED BY '"'
+LINES TERMINATED BY '\r\n'
+IGNORE 1 LINES
+(@lastModifiedTSD, path, name, @parentFolderID, ID)
+SET lastModifiedTSD = STR_TO_DATE(@lastModifiedTSD, '%d.%m.%Y %H:%i:%s'),
+	parentFold"
+35,0.00012410,"SHOW WARNINGS"
+36,3.39772600,"LOAD DATA INFILE '../data/DBS_file_analysis_driveD_neu.csv' INTO TABLE file
+FIELDS TERMINATED BY ','
+ENCLOSED BY '"'
+LINES TERMINATED BY '\r\n'
+IGNORE 1 LINES
+(@lastModifiedTSD, @sizeInBytes, @lastAccessedTSD, name, filetype, folderID, @folder, sizeAsString, @creationTSD)
+SET lastModifiedTSD = STR_T"
+37,0.00017490,"SHOW WARNINGS"
+38,5.12155710,"LOAD DATA INFILE '../data/DBS_folder_analysis_driveC_neu.csv' INTO TABLE folder
+FIELDS TERMINATED BY ','
+ENCLOSED BY '"'
+LINES TERMINATED BY '\r\n'
+IGNORE 1 LINES
+(@lastModifiedTSD, path, name, @parentFolderID, ID)
+SET lastModifiedTSD = STR_TO_DATE(@lastModifiedTSD, '%d.%m.%Y %H:%i:%s'),
+	parentFold"
+39,0.00007590,"SHOW WARNINGS"
+40,13.34190170,"LOAD DATA INFILE '../data/DBS_file_analysis_driveC_neu.csv' INTO TABLE file
+FIELDS TERMINATED BY ','
+ENCLOSED BY '"'
+LINES TERMINATED BY '\r\n'
+IGNORE 1 LINES
+(@lastModifiedTSD, @sizeInBytes, @lastAccessedTSD, name, filetype, folderID, @folder, sizeAsString, @creationTSD)
+SET lastModifiedTSD = STR_T"
+41,1.13899390,"create index ix_folder_name on folder(name asc)"
+42,13.63620310,"create index ix_file_name on file(name asc)"
+43,1.10295530,"create index ix_file_filetype on file(filetype asc)"
+44,1.08224050,"create index ix_file_sizeInBytes on file(sizeInBytes asc)"

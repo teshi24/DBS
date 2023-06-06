@@ -1,0 +1,84 @@
+Query_ID,Duration,Query
+18,0.02970210,"CREATE TABLE `foldername` (
+  `ID` INT NOT NULL AUTO_INCREMENT,
+  `name` VARCHAR(255) NOT NULL,
+  `ratiobasisID` INT NOT NULL,
+  PRIMARY KEY (`ID`),
+  UNIQUE INDEX `name_UNIQUE` (`name` ASC),
+  CONSTRAINT `fk_foldername_ratiobasis1`
+    FOREIGN KEY (`ratiobasisID`)
+    REFERENCES `ratiobasis` (`ID`)"
+19,0.00254930,"INSERT INTO `foldername` (`ID`, `name`, `ratiobasisID`) VALUES
+(1, 'System32', 13),
+(2, 'WinSxS', 13),
+(3, 'System Volume Information', 13),
+(4, 'C:\\Windows\\Temp', 1),
+(5, 'C:\\Windows\\Downloaded Program Files', 1),
+(6, 'C:\\Windows\\LiveKernelReports', 1),
+(7, 'C:\\Program Files\\rempl', 1),
+(8,"
+20,0.04055670,"CREATE TABLE `size` (
+  `ID` INT NOT NULL AUTO_INCREMENT,
+  `sizeInBytes` BIGINT NOT NULL,
+  `ratiobasisID` INT NOT NULL,
+  `sizeAsString` VARCHAR(20) NOT NULL,
+  PRIMARY KEY (`ID`),
+  CONSTRAINT `fk_size_ratiobasis1`
+    FOREIGN KEY (`ratiobasisID`)
+    REFERENCES `ratiobasis` (`ID`)
+    ON DELETE "
+21,0.00301540,"INSERT INTO `size` (`ID`, `sizeInBytes`, `ratiobasisID`, `sizeAsString`) VALUES
+(1,        51200, 10, "50 KB"),
+(2,      1048576, 9, "1 MB"),
+(3,     15728640, 8, "15 MB"),
+(4,   1073741824, 7, "1 GB"),
+(5,  10737418240, 6, "10 GB"),
+(6, 107374182400, 5, "100 GB")"
+22,0.02344200,"CREATE TABLE `date` (
+  `ID` INT NOT NULL AUTO_INCREMENT,
+  `days` INT NOT NULL,
+  `type` ENUM('R', 'A', 'P') NOT NULL DEFAULT 'A' COMMENT 'R = Recycle Bin, A = Anywhere, P = Personal Files',
+  `created` TINYINT NOT NULL,
+  `lastAccess` TINYINT NOT NULL,
+  `ratiobasisID` INT NOT NULL,
+  PRIMARY KEY "
+23,0.00247620,"INSERT INTO `date` (`ID`, `days`, `type`, `created`, `lastAccess`, `ratiobasisID`) VALUES
+(1, 60, 'R', 1, 0, 1),
+(2, 30, 'R', 1, 0, 2),
+(3, 14, 'R', 1, 0, 3),
+(4, 1, 'R', 1, 0, 4),
+(5, 999999, 'A', 0, 1, 5),
+(6, 360, 'A', 0, 1, 6),
+(7, 180, 'A', 0, 1, 7),
+(8, 60, 'A', 0, 1, 8),
+(9, 30, 'A', 0, 1, 9)"
+24,0.02866800,"CREATE TABLE `folder` (
+  `ID` INT NOT NULL AUTO_INCREMENT,
+  `path` VARCHAR(255) NOT NULL,
+  `name` VARCHAR(255) NOT NULL,
+  `lastModifiedTSD` TIMESTAMP NULL,
+  `parentFolderID` INT NULL,
+  PRIMARY KEY (`ID`),
+  UNIQUE INDEX `path_name_UNIQUE` (`path`, `name` ASC),
+  UNIQUE INDEX `idfolder_UNIQUE` "
+25,0.02498550,"CREATE TABLE `file` (
+  `ID` INT NOT NULL AUTO_INCREMENT,
+  `folderID` INT NOT NULL,
+  `folder` VARCHAR(255) NOT NULL,
+  `name` VARCHAR(255) NOT NULL,
+  `lastAccessedTSD` TIMESTAMP NULL,
+  `lastModifiedTSD` TIMESTAMP NULL,
+  `creationTSD` TIMESTAMP NULL,
+  `sizeInBytes` BIGINT NOT NULL,
+  `sizeAsStr"
+26,0.00016200,"DROP PROCEDURE IF EXISTS drop_index_if_exists"
+27,0.00007720,"SHOW WARNINGS"
+28,0.00589900,"CREATE PROCEDURE drop_index_if_exists(in theTable varchar(128), in theIndexName varchar(128) )
+BEGIN
+ IF((SELECT COUNT(*) AS index_exists FROM information_schema.statistics WHERE TABLE_SCHEMA = DATABASE() and table_name =
+theTable AND index_name = theIndexName) > 0) THEN
+   SET @s = CONCAT('DROP IND"
+29,0.01221960,"create index ix_filetype_fileending on filetype(fileending asc)"
+30,0.01152930,"create unique index ix_size_sizeInBytes on size(sizeInBytes asc)"
+31,0.01233300,"create index ix_date_lastAccessNDays on date(lastAccess asc, days asc)"
+32,0.00010910,COMMIT

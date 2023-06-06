@@ -4,6 +4,8 @@
 -- Server-Version: 10.4.28-MariaDB
 -- PHP-Version: 8.2.4
 
+SET profiling = 1;
+
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
 SET time_zone = "+00:00";
@@ -304,14 +306,14 @@ theTable AND index_name = theIndexName) > 0) THEN
 END $$
 DELIMITER ;
 
-create index ix_filetype_fileending on filetype(fileending asc);
-create unique index ix_size_sizeInBytes on size(sizeInBytes asc);
-create index ix_date_lastAccessNDays on date(lastAccess asc, days asc);
--- todo: maybe add this when queries are corrected -- create index ix_date_lastAccess on date(lastAccess asc);
--- todo: maybe add this when queries are corrected -- create index ix_date_days on date(days asc);
-
+CREATE INDEX ix_filetype_fileending ON filetype(fileending ASC);
+CREATE UNIQUE INDEX ix_size_sizeInBytes ON size(sizeInBytes ASC);
+CREATE INDEX ix_date_lastAccessNDays ON date(lastAccess ASC, days ASC);
 
 COMMIT;
+
+SET profiling = 0;
+SHOW PROFILES;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;

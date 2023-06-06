@@ -1,0 +1,29 @@
+Query_ID,Duration,Query
+94,5.95928430,"create table folder_foldername_preAnalysis (primary key (folderID, ratiobasisID)) as
+-- / EXPLAIN
+select F.id as 'folderID', F.path, FN.id as 'foldernameID', FN.ratiobasisID, RB.recommendedAction, RB.ratio, RB.weight FROM FOLDER F
+JOIN FOLDERNAME FN ON fn.id in (
+		select innerFN.id from FOLDERNAME "
+95,0.04729640,"select * from folder_foldername_preAnalysis"
+96,0.00028830,"DROP TABLE IF exists folder_foldername_preAnalysis_duplicatedFolders"
+97,0.00007130,"SHOW WARNINGS"
+98,0.03871250,"create table folder_foldername_preAnalysis_duplicatedFolders (primary key (folderId)) as
+  select folderId, count(*) from folder_foldername_preAnalysis F
+  group by folderId
+  having count(*) > 1"
+99,0.00041400,"select * from folder_foldername_preAnalysis_duplicatedFolders"
+100,0.00041000,"DROP TABLE IF exists FOLDER_FOLDERNAME_ANALYSIS"
+101,0.00006560,"SHOW WARNINGS"
+102,0.00011910,"set profiling = 1"
+103,0.01921180,"create table FOLDER_FOLDERNAME_ANALYSIS (primary key (folderID)) as 
+	SELECT f.* FROM folder_foldername_preAnalysis F
+       join folder_foldername_preAnalysis_duplicatedFolders df on F.folderId =  df.folderId
+	   where f.weight = (
+		  select MAX(innerF.weight)
+		  from folder_foldername_preAnalysi"
+104,0.00038100,"select * from FOLDER_FOLDERNAME_ANALYSIS"
+105,0.23656880,"insert ignore into FOLDER_FOLDERNAME_ANALYSIS (`folderID`, `path`, `foldernameID`, `ratiobasisID`, `recommendedAction`, `ratio`, `weight`)
+	SELECT * FROM folder_foldername_preAnalysis F"
+106,0.00009230,"SHOW WARNINGS"
+107,0.06402030,"select * from FOLDER_FOLDERNAME_ANALYSIS"
+108,0.00009320,COMMIT

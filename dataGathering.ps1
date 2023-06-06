@@ -1,4 +1,8 @@
-﻿$mainDirToAnalyze = "C:\"
+﻿############################################################
+#                          Config                          #
+############################################################
+
+$mainDirToAnalyze = "C:\"
 $xamppMysqlDataFolder = "C:\xampp\mysql\data\"
 $outputFileForFileMetaData = $xamppMysqlDataFolder + "DBS_file_analysis.csv"
 $outputFileForDirMetaData = $xamppMysqlDataFolder + "DBS_folder_analysis.csv"
@@ -20,15 +24,21 @@ $outputFileForDirMetaData = $xamppMysqlDataFolder + "DBS_folder_analysis.csv"
 ".m2"
 )
 
+$alreadyAnalyzedFolderCount = 0;
+
+
+############################################################
+#                          Script                          #
+############################################################
+
 if(!([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] 'Administrator')) {
  echo "Admin Rights are required to run this script!"
  Exit
 }
 
-
-$currentFolderID = 7708
 [HashTable]$folderIDs = $hash = @{} 
-$maxFolderID = 7708
+$currentFolderID = $alreadyAnalyzedFolderCount
+$maxFolderID = $alreadyAnalyzedFolderCount
 
 
 function formatPath($path) {
@@ -56,7 +66,7 @@ Function List-FileMetaData
         $folderobj = $shellobj.namespace($pathname)
         $fileobj = $folderobj.parsename($filename)
 
-        $hash['folder'] = formatPath($folderobj.getDetailsOf($fileobj, 191))
+        # $hash['folder'] = formatPath($folderobj.getDetailsOf($fileobj, 191))
         $hash['name'] = $fileobj.name()
         $hash['lastAccessedTSD'] = $folderobj.getDetailsOf($fileobj, 5)
         $hash['lastModifiedTSD'] = $fileobj.modifyDate()
@@ -78,10 +88,7 @@ Function List-FileMetaData
 
 Function List-DirMetaData  
 {  
-    param([Parameter(Mandatory=$True)][string]$Dir = $(throw "Parameter -Dir is required."))
-  
-    $tmp = Get-ChildItem $Dir  
-    $pathname = $tmp.DirectoryName
+    param([Parameter(Mandatory=$True)][string]$Dir = $(throw "Parameter -Dir is required.")) 
   
     [HashTable]$hash = @{} 
     try{ 

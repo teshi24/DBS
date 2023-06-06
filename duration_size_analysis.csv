@@ -1,0 +1,27 @@
+Query_ID,Duration,Query
+113,0.00011060,COMMIT
+114,0.00030090,"DROP TABLE IF exists FILE_FOLDERNAME_ANALYSIS"
+115,0.00006800,"SHOW WARNINGS"
+116,1.42684270,"CREATE TABLE FILE_FOLDERNAME_ANALYSIS (primary key (ID)) AS
+-- / EXPLAIN
+SELECT F.id, F.name, F.folder, F.folderId, FN.ratiobasisID, FN.recommendedAction, FN.ratio, FN.weight FROM FILE F
+	JOIN FOLDER_FOLDERNAME_ANALYSIS FN ON F.folderID = FN.folderID"
+117,0.31340610,"SELECT * FROM FILE_FOLDERNAME_ANALYSIS"
+118,0.00008160,COMMIT
+119,0.00028900,"DROP TABLE IF exists FILE_FILETYPE_ANALYSIS"
+120,0.00023600,"SHOW WARNINGS"
+121,0.88887320,"CREATE TABLE FILE_FILETYPE_ANALYSIS (primary key (ID)) AS
+-- / EXPLAIN_
+SELECT F.id, F.name, F.folder, F.filetype, FT.fileending as 'IDENTIFIED FILEENDING',  FT.ratiobasisID, RB.recommendedAction, RB.ratio, RB.weight FROM FILE F
+	JOIN FILETYPE FT ON F.filetype = FT.fileending
+    JOIN RATIOBASIS RB "
+122,0.11176860,"SELECT * FROM FILE_FILETYPE_ANALYSIS"
+123,0.00024430,"DROP TABLE IF exists file_size_analysis"
+124,0.00005800,"SHOW WARNINGS"
+125,7.67603820,"CREATE TABLE file_size_analysis (primary key (ID)) AS
+-- EXPLAIN
+SELECT F.id, F.name, F.folder, F.sizeInBytes, F.sizeAsString,
+       S.sizeInBytes as minSizeInBytes, S.id as "sizeId", S.sizeInBytes as 'treshhold sizeInBytes', S.sizeAsString as 'treshhold sizeAsString', S.ratiobasisID,
+       RB.rec"
+126,4.98964930,"SELECT * FROM file_size_analysis"
+127,0.00008920,COMMIT

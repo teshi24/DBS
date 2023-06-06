@@ -21,11 +21,11 @@ set profiling = 1;
 create table file_consolidatedRatios (primary key (id)) as
 -- explain
 SELECT f.id, f.folder, f.folderid, f.name, f.lastAccessedTSD, f.sizeAsString, f.sizeInBytes, f.filetype
-        , fna.recommendedAction as fna_recommendedAction, fna.ratio * fna.weight / 100 as fna_weighted_average
-		, ffna.recommendedAction as ffna_recommendedAction, ffna.ratio * ffna.weight / 100 as ffna_weighted_average
-		, fsa.recommendedAction as fta_recommendedAction, fta.ratio * fta.weight / 100 as fta_weighted_average
-		, fsa.recommendedAction as fsa_recommendedAction, fsa.ratio * fsa.weight / 100 as fsa_weighted_average
-		, flaa.recommendedAction as flaa_recommendedAction, flaa.ratio * flaa.weight / 100 as flaa_weighted_average
+        , fna.recommendedAction as fna_recommendedAction, fna.ratio * fna.weight / 100 as fna_weightedRatio
+		, ffna.recommendedAction as ffna_recommendedAction, ffna.ratio * ffna.weight / 100 as ffna_weightedRatio
+		, fsa.recommendedAction as fta_recommendedAction, fta.ratio * fta.weight / 100 as fta_weightedRatio
+		, fsa.recommendedAction as fsa_recommendedAction, fsa.ratio * fsa.weight / 100 as fsa_weightedRatio
+		, flaa.recommendedAction as flaa_recommendedAction, flaa.ratio * flaa.weight / 100 as flaa_weightedRatio
 FROM
   file f
   	left join file_filename_analysis fna on fna.id = f.id
@@ -53,9 +53,9 @@ BEGIN
   set profiling = 1;
   UPDATE file_consolidatedRatios m  
   SET
-    m.B_ratio = IF(m.fna_recommendedAction = 'B', m.fna_weighted_average, 0) + IF(m.ffna_recommendedAction = 'B', m.ffna_weighted_average, 0) +IF(m.fta_recommendedAction = 'B', m.fta_weighted_average, 0) +IF(m.fsa_recommendedAction = 'B', m.fsa_weighted_average, 0) +IF(m.flaa_recommendedAction = 'B', m.flaa_weighted_average, 0),
-    m.D_ratio = IF(m.fna_recommendedAction = 'D', m.fna_weighted_average, 0) + IF(m.ffna_recommendedAction = 'D', m.ffna_weighted_average, 0) + IF(m.fta_recommendedAction = 'D', m.fta_weighted_average, 0) +IF(m.fsa_recommendedAction = 'D', m.fsa_weighted_average, 0) +IF(m.flaa_recommendedAction = 'D', m.flaa_weighted_average, 0),
-    m.N_ratio = IF(m.fna_recommendedAction = 'N', m.fna_weighted_average, 0) + IF(m.ffna_recommendedAction = 'N', m.ffna_weighted_average, 0) + IF(m.fta_recommendedAction = 'N', m.fta_weighted_average, 0) +IF(m.fsa_recommendedAction = 'N', m.fsa_weighted_average, 0) +IF(m.flaa_recommendedAction = 'N', m.flaa_weighted_average, 0),
+    m.B_ratio = IF(m.fna_recommendedAction = 'B', m.fna_weightedRatio, 0) + IF(m.ffna_recommendedAction = 'B', m.ffna_weightedRatio, 0) +IF(m.fta_recommendedAction = 'B', m.fta_weightedRatio, 0) +IF(m.fsa_recommendedAction = 'B', m.fsa_weightedRatio, 0) +IF(m.flaa_recommendedAction = 'B', m.flaa_weightedRatio, 0),
+    m.D_ratio = IF(m.fna_recommendedAction = 'D', m.fna_weightedRatio, 0) + IF(m.ffna_recommendedAction = 'D', m.ffna_weightedRatio, 0) + IF(m.fta_recommendedAction = 'D', m.fta_weightedRatio, 0) +IF(m.fsa_recommendedAction = 'D', m.fsa_weightedRatio, 0) +IF(m.flaa_recommendedAction = 'D', m.flaa_weightedRatio, 0),
+    m.N_ratio = IF(m.fna_recommendedAction = 'N', m.fna_weightedRatio, 0) + IF(m.ffna_recommendedAction = 'N', m.ffna_weightedRatio, 0) + IF(m.fta_recommendedAction = 'N', m.fta_weightedRatio, 0) +IF(m.fsa_recommendedAction = 'N', m.fsa_weightedRatio, 0) +IF(m.flaa_recommendedAction = 'N', m.flaa_weightedRatio, 0),
     m.no_ratio_count = IF(m.fna_recommendedAction IS NULL, 1, 0) + IF(m.ffna_recommendedAction IS NULL, 1, 0) + IF(m.fta_recommendedAction IS NULL, 1, 0) +IF(m.fsa_recommendedAction  IS NULL, 1, 0) +IF(m.flaa_recommendedAction IS NULL, 1, 0)
   ;
   
