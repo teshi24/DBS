@@ -4,8 +4,6 @@
 -- Server-Version: 10.4.28-MariaDB
 -- PHP-Version: 8.2.4
 
-SET profiling = 1;
-
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
 SET time_zone = "+00:00";
@@ -15,6 +13,8 @@ SET time_zone = "+00:00";
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
 /*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
 /*!40101 SET NAMES utf8mb4 */;
+
+SET PROFILING = 1;
 
 --
 -- Datenbank: `fsc`
@@ -35,7 +35,8 @@ CREATE TABLE `ratiobasis` (
   `ratio` INT NOT NULL,
   `weight` INT NOT NULL,
   `recommendedAction` ENUM('D', 'B', 'N') NULL COMMENT 'D = Delete, B = Backup, N = Nothing, don\\\'t touch!\', null = no specific action recommended by this entry alone',
-  PRIMARY KEY (`ID`))
+  PRIMARY KEY (`ID`),
+  UNIQUE INDEX `idratiobasis_UNIQUE` (`ID` ASC))
 ENGINE = InnoDB;
 
 --
@@ -58,6 +59,9 @@ INSERT INTO `ratiobasis` (`ID`, `ratio`, `weight`, `recommendedAction`) VALUES
 (13, 100, 100, 'N'),
 (14, 50, 50, 'N');
 
+COMMIT;
+SHOW PROFILES;
+
 -- --------------------------------------------------------
 
 --
@@ -69,8 +73,10 @@ CREATE TABLE `filename` (
   `name` VARCHAR(255) NOT NULL,
   `ratiobasisID` INT NOT NULL,
   PRIMARY KEY (`ID`),
-  UNIQUE INDEX `name_UNIQUE` (`name` ASC),
-  CONSTRAINT `fk_filename_ratiobasis1`
+  UNIQUE INDEX `idfilename_UNIQUE` (`ID` ASC),
+--  UNIQUE INDEX `idx_filename_name_UNIQUE` (`name` ASC),
+  INDEX `fk_filename_ratiobasis_idx` (`ratiobasisID` ASC),
+  CONSTRAINT `fk_filename_ratiobasis`
     FOREIGN KEY (`ratiobasisID`)
     REFERENCES `ratiobasis` (`ID`)
     ON DELETE NO ACTION
@@ -96,8 +102,10 @@ CREATE TABLE `filetype` (
   `fileending` VARCHAR(20) NOT NULL,
   `ratiobasisID` INT NOT NULL,
   PRIMARY KEY (`ID`),
-  INDEX `fk_filetype_ratiobasis1_idx` (`ratiobasisID` ASC),
-  CONSTRAINT `fk_filetype_ratiobasis1`
+  UNIQUE INDEX `idfiletype_UNIQUE` (`ID` ASC),
+  -- INDEX `idx_filetype_fileending` (fileending ASC),
+  INDEX `fk_filetype_ratiobasis_idx` (`ratiobasisID` ASC),
+  CONSTRAINT `fk_filetype_ratiobasis`
     FOREIGN KEY (`ratiobasisID`)
     REFERENCES `ratiobasis` (`ID`)
     ON DELETE NO ACTION
@@ -133,45 +141,48 @@ CREATE TABLE `foldername` (
   `name` VARCHAR(255) NOT NULL,
   `ratiobasisID` INT NOT NULL,
   PRIMARY KEY (`ID`),
-  UNIQUE INDEX `name_UNIQUE` (`name` ASC),
-  CONSTRAINT `fk_foldername_ratiobasis1`
+  UNIQUE INDEX `idfoldername_UNIQUE` (`ID` ASC),
+ -- UNIQUE INDEX `idx_foldername_name_UNIQUE` (`name` ASC),
+  INDEX `fk_foldername_ratiobasis_idx` (`ratiobasisID` ASC),
+  CONSTRAINT `fk_foldername_ratiobasis`
     FOREIGN KEY (`ratiobasisID`)
     REFERENCES `ratiobasis` (`ID`)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION)
 ENGINE = InnoDB;
+
 --
 -- Daten für Tabelle `foldername`
 --
 INSERT INTO `foldername` (`ID`, `name`, `ratiobasisID`) VALUES
-(1, 'System32', 13),
-(2, 'WinSxS', 13),
-(3, 'System Volume Information', 13),
-(4, 'C:\\Windows\\Temp', 1),
-(5, 'C:\\Windows\\Downloaded Program Files', 1),
-(6, 'C:\\Windows\\LiveKernelReports', 1),
-(7, 'C:\\Program Files\\rempl', 1),
-(8, 'C:\\Users\\%\\Downloads', 1),
-(9, 'C:\\Users\\%\\AppData\\Local\\Google\\Chrome\\User Data\\Default\\Cache', 1),
-(10, 'C:\\Users\\%\\AppData\\Local\\Mozilla\\Firefox', 1),
-(11, 'C:\\Users\\%\\AppData\\Local\\Microsoft\\Internet Explorer\\CacheStorage', 1),
-(12, 'C:\\Windows\\Logs\\CBS', 1),
-(13, 'C:\\Windows\\SoftwareDistribution\\Download', 1),
-(14, 'C:\\Users\\%userprofiles%\\AppData\\Local\\Temp', 1),
-(15, 'C:\\Windows\\Prefetch', 1),
-(16, 'C:\\Users\\%userprofiles%\\AppData\\Local\\CrashDumps', 1),
-(17, 'C:\\ProgramData\\Microsoft\\Windows\\WER\\ReportArchive', 1),
-(18, 'C:\\Users\\%userprofiles%\\Documents', 11),
-(19, 'Temp', 2),
-(20, 'Download', 3),
-(21, 'Cache', 2),
-(22, 'LiveKernelReports', 1),
-(23, 'rempl', 1),
-(24, 'logs', 3),
-(25, 'crashdumps', 1),
-(26, 'reportarchive', 1),
-(27, 'Bilder', 11),
-(28, 'Documents', 11);
+(1, '%System32%', 13),
+(2, '%WinSxS%', 13),
+(3, '%System Volume Information%', 13),
+(4, 'C:\\Windows\\Temp%', 1),
+(5, 'C:\\Windows\\Downloaded Program Files%', 1),
+(6, 'C:\\Windows\\LiveKernelReports%', 1),
+(7, 'C:\\Program Files\\rempl%', 1),
+(8, 'C:\\Users\\%\\Downloads%', 1),
+(9, 'C:\\Users\\%\\AppData\\Local\\Google\\Chrome\\User Data\\Default\\Cache%', 1),
+(10, 'C:\\Users\\%\\AppData\\Local\\Mozilla\\Firefox%', 1),
+(11, 'C:\\Users\\%\\AppData\\Local\\Microsoft\\Internet Explorer\\CacheStorage%', 1),
+(12, 'C:\\Windows\\Logs\\CBS%', 1),
+(13, 'C:\\Windows\\SoftwareDistribution\\Download%', 1),
+(14, 'C:\\Users\\%\\AppData\\Local\\Temp%', 1),
+(15, 'C:\\Windows\\Prefetch%', 1),
+(16, 'C:\\Users\\%\\AppData\\Local\\CrashDumps%', 1),
+(17, 'C:\\ProgramData\\Microsoft\\Windows\\WER\\ReportArchive%', 1),
+(18, 'C:\\Users\\%\\Documents%', 11),
+(19, '%Temp%', 2),
+(20, '%Download%', 3),
+(21, '%Cache%', 2),
+(22, '%LiveKernelReports%', 1),
+(23, '%rempl%', 1),
+(24, '%logs%', 3),
+(25, '%crashdumps%', 1),
+(26, '%reportarchive%', 1),
+(27, '%Bilder%', 11),
+(28, '%Documents%', 11);
 
 -- --------------------------------------------------------
 
@@ -184,13 +195,15 @@ CREATE TABLE `size` (
   `ratiobasisID` INT NOT NULL,
   `sizeAsString` VARCHAR(20) NOT NULL,
   PRIMARY KEY (`ID`),
-  CONSTRAINT `fk_size_ratiobasis1`
+  UNIQUE INDEX `idsize_UNIQUE` (`ID` ASC),
+  UNIQUE INDEX `idx_size_sizeInBytes_unique` (sizeInBytes ASC),
+  INDEX `fk_size_ratiobasis_idx` (`ratiobasisID` ASC),
+  CONSTRAINT `fk_size_ratiobasis`
     FOREIGN KEY (`ratiobasisID`)
     REFERENCES `ratiobasis` (`ID`)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION)
 ENGINE = InnoDB;
-
 
 --
 -- Daten für Tabelle `size`
@@ -204,6 +217,8 @@ INSERT INTO `size` (`ID`, `sizeInBytes`, `ratiobasisID`, `sizeAsString`) VALUES
 (5,  10737418240, 6, "10 GB"),
 (6, 107374182400, 5, "100 GB");
 
+-- --------------------------------------------------------
+
 --
 -- Tabellenstruktur für Tabelle `date`
 --
@@ -215,7 +230,11 @@ CREATE TABLE `date` (
   `lastAccess` TINYINT NOT NULL,
   `ratiobasisID` INT NOT NULL,
   PRIMARY KEY (`ID`),
-  CONSTRAINT `fk_date_ratiobasis1`
+  UNIQUE INDEX `iddate_UNIQUE` (`ID` ASC),
+  INDEX `idx_date_lastAccessAndDays` (lastAccess ASC, days ASC),
+  UNIQUE INDEX `idx_date_lastAccessAndTypeAndDays` (lastAccess ASC, type ASC, days ASC),
+  INDEX `fk_date_ratiobasis_idx` (`ratiobasisID` ASC),
+  CONSTRAINT `fk_date_ratiobasis`
     FOREIGN KEY (`ratiobasisID`)
     REFERENCES `ratiobasis` (`ID`)
     ON DELETE NO ACTION
@@ -243,6 +262,9 @@ INSERT INTO `date` (`ID`, `days`, `type`, `created`, `lastAccess`, `ratiobasisID
 (14, 0, 'A', 1, 1, 14),
 (15, 0, 'P', 1, 1, 14);
 
+COMMIT;
+SHOW PROFILES;
+
 -- --------------------------------------------------------
 
 --
@@ -256,10 +278,10 @@ CREATE TABLE `folder` (
   `lastModifiedTSD` TIMESTAMP NULL,
   `parentFolderID` INT NULL,
   PRIMARY KEY (`ID`),
-  UNIQUE INDEX `path_name_UNIQUE` (`path`, `name` ASC),
+  UNIQUE INDEX `idx_folder_pathAndName_UNIQUE` (`path`, `name` ASC),
   UNIQUE INDEX `idfolder_UNIQUE` (`ID` ASC),
-  INDEX `fk_folder_folder1_idx` (`parentFolderID` ASC),
-  CONSTRAINT `fk_folder_folder1`
+  INDEX `fk_folder_folder_idx` (`parentFolderID` ASC),
+  CONSTRAINT `fk_folder_folder`
     FOREIGN KEY (`parentFolderID`)
     REFERENCES `folder` (`ID`)
     ON DELETE NO ACTION
@@ -285,6 +307,7 @@ CREATE TABLE `file` (
   `filetype` VARCHAR(45) NOT NULL,
   PRIMARY KEY (`ID`),
   UNIQUE INDEX `idfile_UNIQUE` (`ID` ASC),
+  INDEX `fk_file_folder_idx` (`folderID` ASC),
   CONSTRAINT `fk_file_folder`
     FOREIGN KEY (`folderID`)
     REFERENCES `folder` (`ID`)
@@ -292,6 +315,9 @@ CREATE TABLE `file` (
     ON UPDATE NO ACTION
   )
 ENGINE = InnoDB;
+
+COMMIT;
+SHOW PROFILES;
 
 DELIMITER $$
 DROP PROCEDURE IF EXISTS drop_index_if_exists $$
@@ -306,13 +332,9 @@ theTable AND index_name = theIndexName) > 0) THEN
 END $$
 DELIMITER ;
 
-CREATE INDEX ix_filetype_fileending ON filetype(fileending ASC);
-CREATE UNIQUE INDEX ix_size_sizeInBytes ON size(sizeInBytes ASC);
-CREATE INDEX ix_date_lastAccessNDays ON date(lastAccess ASC, days ASC);
-
 COMMIT;
 
-SET profiling = 0;
+SET PROFILING = 0;
 SHOW PROFILES;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

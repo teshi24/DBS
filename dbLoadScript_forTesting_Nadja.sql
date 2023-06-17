@@ -1,8 +1,9 @@
-set profiling = 1;
-call drop_index_if_exists('folder', 'ix_folder_name');
-call drop_index_if_exists('file', 'ix_file_name');
-call drop_index_if_exists('file', 'ix_file_filetype');
-call drop_index_if_exists('file', 'ix_file_sizeInBytes');
+SET PROFILING = 1;
+-- CALL DROP_INDEX_IF_EXISTS('folder', 'ix_folder_name');
+CALL DROP_INDEX_IF_EXISTS('folder', 'idx_folder_path');
+CALL DROP_INDEX_IF_EXISTS('file', 'idx_file_name');
+CALL DROP_INDEX_IF_EXISTS('file', 'idx_file_filetype');
+-- CALL DROP_INDEX_IF_EXISTS('file', 'idx_file_sizeInBytes');
 
 LOAD DATA INFILE '../data/DBS_folder_analysis_driveD_neu.csv' INTO TABLE folder
 FIELDS TERMINATED BY ','
@@ -60,10 +61,12 @@ SET lastModifiedTSD = STR_TO_DATE(@lastModifiedTSD, '%d.%m.%Y %H:%i:%s'),
     folder = (SELECT path FROM folder WHERE id = folderID)
 ;
 
-create index ix_folder_name on folder(name asc);
-create index ix_file_name on file(name asc);
-create index ix_file_filetype on file(filetype asc);
-create index ix_file_sizeInBytes on file(sizeInBytes asc);
+-- CREATE INDEX ix_folder_name on folder(name ASC);
+CREATE INDEX idx_folder_path on folder(path ASC);
+CREATE INDEX idx_file_name on file(name ASC);
+CREATE INDEX idx_file_filetype on file(filetype ASC);
+-- CREATE INDEX idx_file_sizeInBytes on file(sizeInBytes ASC);
 
-set profiling = 0;
-show profiles;
+COMMIT;
+SET PROFILING = 0;
+SHOW PROFILES;

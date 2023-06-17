@@ -1,73 +1,69 @@
 USE `fsc`;
 SET profiling = 1;
-
--- möglichst einschränken 
--- > erst ganz am schluss left join auf die Files wos nötig ist --> done
--- Funktionen im Where und Order by sparsam
--- zwischentabellen brauchen keine sortierung, eigenentlich nur am schluss --> done
-
--- todo: add also the analysis data to it now...
--- Ziel: finde ratios für folders
--- FOLDERNAME
--- /*
-
 START TRANSACTION;
 
+-- Ziel: finde ratios für folders
+-- FOLDERNAME
+
 DROP TABLE IF exists folder_foldername_preAnalysis;
-create table folder_foldername_preAnalysis (primary key (folderID, ratiobasisID)) as
+CREATE TABLE folder_foldername_preAnalysis (PRIMARY KEY (folderID, ratiobasisID)) AS
 -- / EXPLAIN
-select F.id as 'folderID', F.path, FN.id as 'foldernameID', FN.ratiobasisID, RB.recommendedAction, RB.ratio, RB.weight FROM FOLDER F
-JOIN FOLDERNAME FN ON fn.id in (
-		select innerFN.id from FOLDERNAME innerFN
-			where F.path like concat('%', innerFN.name, '%')
+SELECT F.id AS 'folderID', F.path, FN.id AS 'foldernameID', FN.ratiobasisID, RB.recommendedAction, RB.ratio, RB.weight
+    FROM FOLDER F
+    JOIN FOLDERNAME FN ON fn.id IN (
+		SELECT innerFN.id FROM FOLDERNAME innerFN
+			WHERE F.path LIKE innerFN.name
     )
     JOIN RATIOBASIS RB ON FN.ratiobasisID = RB.ID
-    group by folderID, ratiobasisID;
--- 
-create index ix_folderFoldernamePreAnalysis_weightRatio on folder_foldername_preAnalysis(weight asc, ratio asc);
+    GROUP BY folderID, ratiobasisID;
+ 
+-- CREATE INDEX ix_folderFoldernamePreAnalysis_weightRatio on folder_foldername_preAnalysis(weight asc, ratio asc);
+-- CREATE INDEX ix_folderFoldernamePreAnalysis_weight on folder_foldername_preAnalysis(weight asc);
+-- CREATE INDEX ix_folderFoldernamePreAnalysis_ratio on folder_foldername_preAnalysis(ratio asc);
 
-select * from folder_foldername_preAnalysis;
+-- explain
+-- SELECT * FROM folder_foldername_preAnalysis;
 
-DROP TABLE IF exists folder_foldername_preAnalysis_duplicatedFolders;
-create table folder_foldername_preAnalysis_duplicatedFolders (primary key (folderId)) as
-  select folderId, count(*) from folder_foldername_preAnalysis F
-  group by folderId
-  having count(*) > 1;
+DROP TABLE IF EXISTS folder_foldername_preAnalysis_duplicatedFolders;
+CREATE TABLE folder_foldername_preAnalysis_duplicatedFolders (PRIMARY KEY (folderId)) AS
+-- explain
+  SELECT folderId /*, COUNT(*) */ FROM folder_foldername_preAnalysis F
+  GROUP BY folderId
+  HAVING COUNT(*) > 1;
 
-select * from folder_foldername_preAnalysis_duplicatedFolders;
+-- SELECT * FROM folder_foldername_preAnalysis_duplicatedFolders;
 
-DROP TABLE IF exists FOLDER_FOLDERNAME_ANALYSIS;
-set profiling = 1;
-create table FOLDER_FOLDERNAME_ANALYSIS (primary key (folderID)) as 
+DROP TABLE IF EXISTS FOLDER_FOLDERNAME_ANALYSIS;
+CREATE TABLE FOLDER_FOLDERNAME_ANALYSIS (PRIMARY KEY (folderID)) AS 
 -- explain
 	SELECT f.* FROM folder_foldername_preAnalysis F
-       join folder_foldername_preAnalysis_duplicatedFolders df on F.folderId =  df.folderId
-	   where f.weight = (
-		  select MAX(innerF.weight)
-		  from folder_foldername_preAnalysis innerF
-		  where innerF.folderID = F.folderID
-		) and f.ratio = (
-		  select MAX(innerF.ratio)
-		  from folder_foldername_preAnalysis innerF
-		  where innerF.folderID = F.folderID
+       JOIN folder_foldername_preAnalysis_duplicatedFolders df ON F.folderId =  df.folderId
+	   WHERE f.weight = (
+		  SELECT MAX(innerF.weight)
+		  FROM folder_foldername_preAnalysis innerF
+		  WHERE innerF.folderID = F.folderID
+		) AND f.ratio = (
+		  SELECT MAX(innerF.ratio)
+		  FROM folder_foldername_preAnalysis innerF
+		  WHERE innerF.folderID = F.folderID
 		);
 
-select * from FOLDER_FOLDERNAME_ANALYSIS;
+-- SELECT * FROM FOLDER_FOLDERNAME_ANALYSIS;
 
-insert ignore into FOLDER_FOLDERNAME_ANALYSIS (`folderID`, `path`, `foldernameID`, `ratiobasisID`, `recommendedAction`, `ratio`, `weight`)
+INSERT IGNORE INTO FOLDER_FOLDERNAME_ANALYSIS (`folderID`, `path`, `foldernameID`, `ratiobasisID`, `recommendedAction`, `ratio`, `weight`)
+-- explain
 	SELECT * FROM folder_foldername_preAnalysis F;
 
-select * from FOLDER_FOLDERNAME_ANALYSIS;
+SELECT * FROM FOLDER_FOLDERNAME_ANALYSIS;
 
 COMMIT;
-show profiles;
+SHOW PROFILES;
 
 -- Ziel: finde ratios für 1 file (filename)
 -- FILENAME todo: this is probably not working
--- /*
-DROP TABLE IF exists FILE_FILENAME_ANALYSIS;
+DROP TABLE IF EXISTS FILE_FILENAME_ANALYSIS;
 
-CREATE TABLE FILE_FILENAME_ANALYSIS (primary key (ID)) AS
+CREATE TABLE FILE_FILENAME_ANALYSIS (PRIMARY KEY (ID)) AS
 -- / EXPLAIN
 SELECT F.id, F.name, F.folder, F.folderId, FN.ratiobasisID, RB.recommendedAction, RB.ratio, RB.weight FROM FILE F
 	JOIN FILENAME FN ON F.name = FN.name
@@ -76,47 +72,50 @@ SELECT F.id, F.name, F.folder, F.folderId, FN.ratiobasisID, RB.recommendedAction
 SELECT * FROM FILE_FILENAME_ANALYSIS;
 
 COMMIT;
-show profiles;
+SHOW PROFILES;
  
 -- Ziel: finde ratios für 1 file (foldername)
 -- FOLDERNAME
--- /*
-DROP TABLE IF exists FILE_FOLDERNAME_ANALYSIS;
-CREATE TABLE FILE_FOLDERNAME_ANALYSIS (primary key (ID)) AS
+DROP TABLE IF EXISTS FILE_FOLDERNAME_ANALYSIS;
+CREATE TABLE FILE_FOLDERNAME_ANALYSIS (PRIMARY KEY (ID)) AS
 -- / EXPLAIN
-SELECT F.id, F.name, F.folder, F.folderId, FN.ratiobasisID, FN.recommendedAction, FN.ratio, FN.weight FROM FILE F
-	JOIN FOLDER_FOLDERNAME_ANALYSIS FN ON F.folderID = FN.folderID;
+SELECT F.id, F.name, F.folder, F.folderId, FN.ratiobasisID, FN.recommendedAction, FN.ratio, FN.weight
+    FROM FILE F
+    JOIN FOLDER_FOLDERNAME_ANALYSIS FN ON F.folderID = FN.folderID;
 
- SELECT * FROM FILE_FOLDERNAME_ANALYSIS;
+SELECT * FROM FILE_FOLDERNAME_ANALYSIS;
 
 COMMIT;
-show profiles;
+SHOW PROFILES;
  
 -- Ziel: finde ratios für 1 file (filetype)    
 -- FILETYPE
---  /*
 DROP TABLE IF exists FILE_FILETYPE_ANALYSIS;
-CREATE TABLE FILE_FILETYPE_ANALYSIS (primary key (ID)) AS
--- / EXPLAIN_
-SELECT F.id, F.name, F.folder, F.filetype, FT.fileending as 'IDENTIFIED FILEENDING',  FT.ratiobasisID, RB.recommendedAction, RB.ratio, RB.weight FROM FILE F
-	JOIN FILETYPE FT ON F.filetype = FT.fileending
+CREATE TABLE FILE_FILETYPE_ANALYSIS (PRIMARY KEY (ID)) AS
+-- / EXPLAIN
+SELECT F.id, F.name, F.folder, F.filetype, FT.fileending AS 'IDENTIFIED FILEENDING',  FT.ratiobasisID, RB.recommendedAction, RB.ratio, RB.weight
+    FROM FILE F
+    JOIN FILETYPE FT ON F.filetype = FT.fileending
     JOIN RATIOBASIS RB ON FT.ratiobasisID = RB.ID;
 
 SELECT * FROM FILE_FILETYPE_ANALYSIS;
 
+COMMIT;
+SHOW PROFILES;
+
 -- Ziel: finde ratios für 1 file (size)
 -- SIZE
 DROP TABLE IF exists file_size_analysis;
-CREATE TABLE file_size_analysis (primary key (ID)) AS
+CREATE TABLE file_size_analysis (PRIMARY KEY (ID)) AS
 -- EXPLAIN
 SELECT F.id, F.name, F.folder, F.sizeInBytes, F.sizeAsString,
-       S.sizeInBytes as minSizeInBytes, S.id as "sizeId", S.sizeInBytes as 'treshhold sizeInBytes', S.sizeAsString as 'treshhold sizeAsString', S.ratiobasisID,
+       S.sizeInBytes AS minSizeInBytes, S.id AS "sizeId", S.sizeInBytes AS 'treshhold sizeInBytes', S.sizeAsString AS 'treshhold sizeAsString', S.ratiobasisID,
        RB.recommendedAction, RB.ratio, RB.weight
  FROM FILE F
 	JOIN SIZE S ON S.sizeInBytes = (
         SELECT MIN(innerS.sizeInBytes)
         FROM SIZE innerS
-        WHERE innerS.sizeInBytes > F.sizeInBytes
+        WHERE innerS.sizeInBytes >= F.sizeInBytes
     )
     JOIN RATIOBASIS RB ON S.ratiobasisID = RB.ID;
 
@@ -124,55 +123,68 @@ SELECT F.id, F.name, F.folder, F.sizeInBytes, F.sizeAsString,
 SELECT * FROM file_size_analysis;
 
 COMMIT;
-show profiles;
+SHOW PROFILES;
  
 -- Ziel: finde ratios für 1 file (last accessed)
 -- DATE - last accessed (first without checking fileloccation)
--- /*
--- todo: used for creation of this data, but could probably be included in foldername analysis
 DROP TABLE IF EXISTS foldertypes;
-CREATE TABLE foldertypes (PRIMARY KEY (id)) as
-select f.id, 'S' as 'type' FROM FOLDER f
-where f.path like '%:\\\\Windows' or f.path like '%:\\\\Windows\\\\%'
-   or f.path like '%\\\\Program Files%' or f.path like '%\\\\Program Files\\\\%'
-   or f.path like '%\\\\Program Files (x86)%' or f.path like '%\\\\Program Files (x86)\\\\%'
-   or f.path like '%\\\\Programme%' or f.path like '%\\\\Programme\\\\%'
+CREATE TABLE foldertypes (PRIMARY KEY (id)) AS
+-- explain
+  SELECT f.id, 'S' as 'type' FROM FOLDER f
+    where f.path like '%:\\\\Windows' or f.path like '%:\\\\Windows\\\\%'
+     or f.path like '%\\\\Program Files' or f.path like '%\\\\Program Files\\\\%'
+     or f.path like '%\\\\Program Files (x86)' or f.path like '%\\\\Program Files (x86)\\\\%'
+     or f.path like '%\\\\Programme' or f.path like '%\\\\Programme\\\\%'
 ;
 INSERT IGNORE INTO foldertypes (id, type)
-select f.id, 'B' FROM FOLDER f
-where f.path like '%\\\\Sicherungen%' or f.path like '%\\\\Sicherungen\\\\%'
-   or f.path like '%\\\\backup%' or f.path like '%\\\\backup\\\\%'
+-- explain
+  SELECT f.id, 'R' FROM FOLDER f
+    WHERE f.path like '%\\\\$RECYCLE.BIN' or f.path like '%\\\\$RECYCLE.BIN\\\\%'
 ;
 INSERT IGNORE INTO foldertypes (id, type)
-select f.id, 'P' FROM FOLDER f
-where f.path like '%\\\\Documents%' or f.path like '%\\\\Documents\\\\%'
-   or f.path like '%\\\\Music%' or f.path like '%\\\\Music\\\\%'
-   or f.path like '%\\\\Videos%' or f.path like '%\\\\Videos\\\\%'
-   or f.path like '%\\\\Pictures%' or f.path like '%\\\\Pictures\\\\%'
-   or f.path like '%\\\\Contacts%' or f.path like '%\\\\Contacts\\\\%'
-   or f.path like '%\\\\OneDrive%' or f.path like '%\\\\OneDrive\\\\%'
+-- explain
+  SELECT f.id, 'B' FROM FOLDER f
+    WHERE f.path like '%\\\\Sicherungen' or f.path like '%\\\\Sicherungen\\\\%'
+      or f.path like '%\\\\backup' or f.path like '%\\\\backup\\\\%'
 ;
 INSERT IGNORE INTO foldertypes (id, type)
-select f.id, 'A' FROM FOLDER f;
--- */
+-- explain
+  SELECT f.id, 'P' FROM FOLDER f
+    WHERE f.path like '%\\\\Documents' or f.path like '%\\\\Documents\\\\%'
+     or f.path like '%\\\\Dokumente' or f.path like '%\\\\Dokumente\\\\%'
+     or f.path like '%\\\\Music' or f.path like '%\\\\Music\\\\%'
+     or f.path like '%\\\\Musik' or f.path like '%\\\\Musik\\\\%'
+     or f.path like '%\\\\Videos' or f.path like '%\\\\Videos\\\\%'
+     or f.path like '%\\\\Pictures' or f.path like '%\\\\Pictures\\\\%'
+     or f.path like '%\\\\Bilder' or f.path like '%\\\\Bilder\\\\%'
+     or f.path like '%\\\\Contacts' or f.path like '%\\\\Contacts\\\\%'
+     or f.path like '%\\\\OneDrive' or f.path like '%\\\\OneDrive\\\\%'
+;
+INSERT IGNORE INTO foldertypes (id, type)
+-- explain
+   SELECT f.id, 'A' FROM FOLDER f;
 
 DROP TABLE IF exists file_lastAccessed_analysis;
-CREATE TABLE file_lastAccessed_analysis (primary key (ID)) AS 
--- explain
-SELECT F.id, F.name, F.folder, F.lastAccessedTSD, DATEDIFF(NOW(), F.lastAccessedTSD) as differenceToToday, d.days as 'tresholdDays', D.ratiobasisId,
-			RB.recommendedAction, RB.ratio, RB.weight
- FROM FILE F
-    JOIN foldertypes ft on ft.id = f.id 
-	JOIN date d ON d.lastAccess = 1 and d.type = ft.type and d.days = (
-		select min(innerD.days)
-        from date innerD
-        where innerD.days >= DATEDIFF(NOW(), F.lastAccessedTSD) and innerD.lastAccess = 1 and innerD.type = ft.type
+CREATE TABLE file_lastAccessed_analysis (PRIMARY KEY (ID)) AS
+-- explain 
+  SELECT F.id, F.name, F.folder, F.lastAccessedTSD,
+         DATEDIFF(NOW(), F.lastAccessedTSD) AS differenceToToday, d.days AS 'tresholdDays',
+         D.ratiobasisId, RB.recommendedAction, RB.ratio, RB.weight
+    FROM FILE F
+    JOIN foldertypes ft ON ft.id = f.folderID 
+    JOIN date d ON d.lastAccess = 1 AND d.type = ft.type AND d.days = (
+	SELECT MIN(innerD.days)
+            FROM date innerD
+            WHERE innerD.days >= DATEDIFF(NOW(), F.lastAccessedTSD)
+                  AND innerD.lastAccess = 1
+                  AND innerD.type = ft.type
     )
-    join ratiobasis rb on rb.ID = d.ratiobasisID; /* todo: could be further improved when the function is not used here...*/
+    JOIN ratiobasis rb on rb.ID = d.ratiobasisID
+;
 
-select * from file_lastAccessed_analysis;
+SELECT * FROM file_lastAccessed_analysis;
 
 COMMIT;
-set profiling = 0;
- show profiles;
- -- show profile for query 1;
+SET PROFILING = 0;
+SHOW PROFILES;
+-- SHOW PROFILE FOR QUERY 1;
